@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+_TARGET="Oberon";
+
+declare -a DEPENDENCIES=(
+  # description             path
+  "G++ Compiler"            "/usr/bin/g++"
+  "Flex lexer generator"    "/usr/bin/flex"
+  "Bison parser generator"  "/usr/bin/bison"
+  "AS the GNU Assembler"    "/usr/bin/as"
+);
+
+echo -e "Checking for $_TARGET dependencies...\n";
+
+while [[ "${#DEPENDENCIES[@]}" -gt 0 ]]; do
+
+  if [[ -e "${DEPENDENCIES[1]}" ]]; then
+    echo -e "☑️ \e[32m"${DEPENDENCIES[0]}" is installed in '${DEPENDENCIES[1]}'\e[39m";
+  else
+    echo -e "☐ \e[31mThe ${DEPENDENCIES[0]} are missing in your OS\e[39m";	
+    _HAS_DEPENDENCIE=true;
+  fi
+  
+  DEPENDENCIES=("${DEPENDENCIES[@]:2}");
+done
+
+if [[ "$_HAS_DEPENDENCIE" == true ]]; then
+  echo -e "\nYou need install all dependencies before make $_TARGET!\n";
+  exit 1;
+fi
+
+echo -e "\nAll $_TARGET dependencies are Ok!\n";
