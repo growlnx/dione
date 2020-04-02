@@ -33,5 +33,5 @@ clean:
 	$(INCLUDE)/stack.hh $(OBJ) $(DEST)
 
 test:
-	bin/$(PROJECT) example/$(FILE)
+	-bin/$(PROJECT) $(FILE)
 

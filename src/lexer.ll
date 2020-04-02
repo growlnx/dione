@@ -78,8 +78,10 @@ blank [ \t]
 {int}     {
             errno = 0;
             long n = strtol (yytext, NULL, 10);
+            
             if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
               driver.error (loc, "integer is out of range");
+            
             return yy::Parser::make_NUMBER(n, loc);
           }
 
@@ -88,7 +90,7 @@ blank [ \t]
           }
 
 .         {
-            driver.error (loc, "invalid token");
+            driver.error (loc, "invalid token: "+std::string(yytext));
           }
 
 <<EOF>>   { 
@@ -97,16 +99,18 @@ blank [ \t]
 %%
 
 void
-Driver::scan_begin()
+Driver::scan_begin() 
 {
   yy_flex_debug = trace_scanning;
 
-  if (file.empty () || file == "-") {
+  if (file.empty () || file == "stdin") {
     yyin = stdin;
+  
   } else if (!(yyin = fopen (file.c_str (), "r"))) {
     error("cannot open " + file + ": " + strerror(errno));
     exit(EXIT_FAILURE);
   }
+
 }
 
 void

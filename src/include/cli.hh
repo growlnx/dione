@@ -9,7 +9,7 @@ namespace cli {
 struct Cli {
   std::vector<std::string> fileNames;
   unsigned verboseLevel;
-  // add more cli args here  
+  bool lexerTrace = false, parseTrace = false;
 };
 
 Cli* 

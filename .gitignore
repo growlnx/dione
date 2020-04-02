@@ -1,6 +1,7 @@
 bin/
-./src/lexer.cc
-./src/parser.cc
-./src/header/parser.hh
-./src/header/location.hh
-./src/header/stack.hh
+obj/
+src/lexer.cc
+src/parser.cc
+src/include/parser.hh
+src/include/location.hh
+src/include/stack.hh

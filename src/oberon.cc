@@ -2,25 +2,27 @@
 #include "driver.hh"
 #include "cli.hh"
 
+namespace cli = oberon::cli;
+
 int
 main (int argc, char *argv[])
 {
-  int res = 0;
-
+  
+  cli::Cli* args = cli::parse(argc, argv);
+  
+  if(args == nullptr) return 1;
+  
   Driver driver;
+  driver.trace_parsing = args->parseTrace; 
+  driver.trace_scanning = args->lexerTrace;
 
-  for (int i = 1; i < argc; ++i) {
+  // TODO: threaded parsing
+  for(std::string file : args->fileNames)
+    driver.parse(file);
+  
 
-    if (argv[i] == std::string ("-p")){
-      driver.trace_parsing = true;
-    } else if (argv[i] == std::string ("-s"))
-      driver.trace_scanning = true;
-    else if (!driver.parse (argv[i])) {
-      std::cout << driver.result << std::endl;
-    } else
-      res = 1;
-  }
-
-  return res;
+  delete args; 
+  
+  return 0;
 }
 

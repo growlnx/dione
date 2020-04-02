@@ -31,11 +31,10 @@ class Driver;
 };
 
 %define parse.trace
-
 %define parse.error verbose
 
 %code {
-# include "driver.hh"
+#include "driver.hh"
 }
 
 %define api.token.prefix {TOK_}
@@ -55,75 +54,30 @@ class Driver;
 %token <std::string> IDENTIFIER "identifier"
 %token <int> NUMBER "number"
 %type  <int> exp "expression"
+
 %printer { yyoutput << $$; } <*>;
 
 %start program;
 
 %%
 
-program: 
-  assignments exp  
+program:
+  NUMBER PLUS NUMBER
   { 
-    driver.result = $2; 
+    // driver.result = $2; 
   }
-  ;
-
-assignments:
-  %empty           
+  | error 
   {
-
-  }
-  | assignments assignment 
-  {
-
+    // std::cout << "ERROOU" << std::endl;
+    error(@1, "errou\n");
+    exit(0);
   }
   ;
-
-assignment:
-  "identifier" ":=" exp 
-  { 
-    driver.variables[$1] = $3; 
-  }
-  ;
-
-%left "+" "-";
-%left "*" "/";
-
-exp:
-  exp "+" exp   
-  { 
-    $$ = $1 + $3; 
-  }
-  | exp "-" exp   
-  { 
-    $$ = $1 - $3; 
-  }
-  | exp "*" exp   
-  { 
-    $$ = $1 * $3; 
-  }
-  | exp "/" exp   
-  { 
-    $$ = $1 / $3; 
-  }
-  | "(" exp ")"   
-  { 
-    std::swap ($$, $2); 
-  }
-  | "identifier"  
-  { 
-    $$ = driver.variables[$1]; 
-  }
-  | "number"
-  { 
-    std::swap ($$, $1); 
-  };
 
 %%
 
 void
-yy::Parser::error (const location_type& l,
-                   const std::string& m)
+yy::Parser::error (const location_type& l, const std::string& m)
 {
   driver.error (l, m);
 }

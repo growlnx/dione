@@ -1,8 +1,7 @@
 #include "driver.hh"
 #include "parser.hh"
 
-Driver::Driver ()
-  : trace_scanning (false), trace_parsing (false)
+Driver::Driver () : trace_scanning (false), trace_parsing (false)
 {
   variables["one"] = 1;
   variables["two"] = 2;
@@ -25,13 +24,15 @@ Driver::parse (const std::string &f)
 }
 
 void
-Driver::error (const yy::location& l, const std::string& m)
+Driver::error (const yy::location& loc, const std::string& msg)
 {
-  std::cerr << l << ": " << m << std::endl;
+  std::cerr << "Oberon:" <<  file << ":" << loc << ": " << msg << std::endl;
+  exit(1);
 }
 
 void
-Driver::error (const std::string& m)
+Driver::error (const std::string& msg)
 {
-  std::cerr << m << std::endl;
+  std::cerr << msg << std::endl;
+  exit(1);
 }
