@@ -22,7 +22,7 @@ cli::parse(int argc, char** argv)
     
     } if(arg == "-h" or arg == "--help") {
       help();
-      return nullptr;
+      exit(1);
 
     } else if(arg == "-v" or arg == "--version") {
     

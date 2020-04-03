@@ -11,6 +11,7 @@ DEST	= bin
 all: 	clean build
 
 build:
+	@echo "build started"
 	bison -o $(SRC)/parser.cc $(SRC)/parser.yy
 	
 	mv $(SRC)/*.hh $(INCLUDE)
@@ -26,12 +27,14 @@ build:
 	$(CC) -I $(INCLUDE) -o $(OBJ)/cli.o        -c $(SRC)/cli.cc
 	
 	$(CC) -I $(INCLUDE) -o $(DEST)/$(PROJECT) $(CFLAGS) $(OBJ)/*.o
-
+	@echo "build finished"
 clean:
+	@echo "clean started"
 	-rm -fr $(SRC)/parser.cc $(INCLUDE)/parser.hh $(SRC)/lexer.cc \
 	$(INCLUDE)/location.hh $(INCLUDE)/position.hh 	 	\
 	$(INCLUDE)/stack.hh $(OBJ) $(DEST)
-
+	@echo "clean finished"
 test:
+	@echo "test started"
 	-bin/$(PROJECT) $(FILE)
-
+	@echo "test finished"

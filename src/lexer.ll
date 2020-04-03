@@ -1,10 +1,11 @@
-%{ /* -*- C++ -*- */
-# include <cerrno>
-# include <climits>
-# include <cstdlib>
-# include <string>
-# include "driver.hh"
-# include "parser.hh"
+%{ 
+/* -*- C++ -*- */
+#include <cerrno>
+#include <climits>
+#include <cstdlib>
+#include <string>
+#include "driver.hh"
+#include "parser.hh"
 
 // Work around an incompatibility in flex (at least versions
 // 2.5.31 through 2.5.33): it generates code that does
@@ -19,22 +20,22 @@ static yy::location loc;
 
 %option noyywrap nounput batch debug noinput
 
-id    [a-zA-Z][a-zA-Z_0-9]*
+id    [a-zA-Z~0-9]*
 
 int   [0-9]+
 
 blank [ \t]
 
 %{
-  // Code run each time a pattern is matched.
-  # define YY_USER_ACTION  loc.columns (yyleng);
+// Code run each time a pattern is matched.
+# define YY_USER_ACTION  loc.columns (yyleng);
 %}
 
 %%
 
 %{
-  // Code run each time yylex is called.
-  loc.step ();
+// Code run each time yylex is called.
+loc.step ();
 %}
 
 {blank}+  {
@@ -46,6 +47,11 @@ blank [ \t]
             loc.step ();
           }
 
+"--".*    {
+            // ignore comments
+            loc.step();
+          }
+
 "-"       {
             return yy::Parser::make_MINUS(loc);
           }
@@ -55,25 +61,60 @@ blank [ \t]
           }
 
 "*"       {
-            return yy::Parser::make_STAR(loc);
+            return yy::Parser::make_MULT(loc);
           }
 
 "/"       {
-            return yy::Parser::make_SLASH(loc);
+            return yy::Parser::make_DIV(loc);
           }
 
 "("       {
-            return yy::Parser::make_LPAREN(loc);
+            return yy::Parser::make_L_PRT(loc);
           }
 
 ")"       {
-            return yy::Parser::make_RPAREN(loc);
+            return yy::Parser::make_R_PRT(loc);
           }
 
-":="      {
-            return yy::Parser::make_ASSIGN(loc);
+"{"       {
+            return yy::Parser::make_L_BRC(loc);
           }
 
+"}"       {
+            return yy::Parser::make_R_BRC(loc);
+          }
+
+".<"      {
+            return yy::Parser::make_L_ASS(loc);
+          }
+
+">."      {
+            return yy::Parser::make_R_ASS(loc);
+          }
+
+">.<"     {
+            return yy::Parser::make_SWAP(loc);
+          }
+
+"dcl"     {
+            return yy::Parser::make_DCL(loc);
+          }
+
+"as"      {
+            return yy::Parser::make_AS(loc);
+          }
+
+"namespace" {
+              return yy::Parser::make_NAMESPACE(loc);
+            }
+
+"::"      {
+            return yy::Parser::make_NAMESPACE_SEP(loc);
+          }
+
+"extern"  {
+            return yy::Parser::make_EXTERN(loc);
+          }
 
 {int}     {
             errno = 0;
@@ -82,11 +123,19 @@ blank [ \t]
             if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
               driver.error (loc, "integer is out of range");
             
-            return yy::Parser::make_NUMBER(n, loc);
+            return yy::Parser::make_DEC_INTEGER(n, loc);
           }
 
-{id}      { 
-            return yy::Parser::make_IDENTIFIER(yytext, loc);
+[a-z]{id} { 
+            return yy::Parser::make_VAR_ID(yytext, loc);
+          }
+
+[A-Z]{id} {
+            return yy::Parser::make_FCN_ID(yytext, loc);
+          }
+
+~{id}     {
+            return yy::Parser::make_DATA_ID(yytext, loc);
           }
 
 .         {
@@ -110,7 +159,6 @@ Driver::scan_begin()
     error("cannot open " + file + ": " + strerror(errno));
     exit(EXIT_FAILURE);
   }
-
 }
 
 void
