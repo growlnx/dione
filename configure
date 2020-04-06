@@ -1,8 +1,33 @@
 #!/usr/bin/env bash
 
-_TARGET="Oberon";
+_TARGET="Dione";
 
-declare -a DEPENDENCIES=(
+function help 
+{
+  echo "[DIONES]\nOptions:\n\t-dcbd,--dont-create-build-dir";
+}
+
+CREATE_BUILD_DIR=true;
+
+# cli args parsing
+while (( "$#" )); do
+  case "$1" in
+    -h|--help)
+      help;
+      exit 2;
+      ;;
+    -dcbd|--dont-create-build-dir)
+      CREATE_BUILD_DIR=false;
+      ;;
+    *)
+      echo "[DIONE] Invalid Arg: $1" >&2;
+      help;
+      exit 1;
+      ;;
+  esac
+done
+
+declare -a OS_DEPENDENCIES=(
   # description             path
   "G++ Compiler"            "/usr/bin/g++"
   "Flex lexer generator"    "/usr/bin/flex"
@@ -10,23 +35,21 @@ declare -a DEPENDENCIES=(
   "AS the GNU Assembler"    "/usr/bin/as"
 );
 
-echo -e "Checking for $_TARGET dependencies...\n";
+echo -e "\n[DIONE] Checking for OS dependencies...\n";
 
-while [[ "${#DEPENDENCIES[@]}" -gt 0 ]]; do
+while [[ "${#OS_DEPENDENCIES[@]}" -gt 0 ]]; do
 
-  if [[ -e "${DEPENDENCIES[1]}" ]]; then
-    echo -e "☑️ \e[32m"${DEPENDENCIES[0]}" is installed in '${DEPENDENCIES[1]}'\e[39m";
+  if [[ -e "${OS_DEPENDENCIES[1]}" ]]; then
+    echo -e "☑️ \e[32m"${OS_DEPENDENCIES[0]}" is installed in '${OS_DEPENDENCIES[1]}'\e[39m";
   else
-    echo -e "☐ \e[31mThe ${DEPENDENCIES[0]} are missing in your OS\e[39m";	
+    echo -e "☐ \e[31mThe ${OS_DEPENDENCIES[0]} are missing in your OS\e[39m";	
     _HAS_DEPENDENCIE=true;
   fi
   
-  DEPENDENCIES=("${DEPENDENCIES[@]:2}");
+  OS_DEPENDENCIES=("${OS_DEPENDENCIES[@]:2}");
 done
 
 if [[ "$_HAS_DEPENDENCIE" == true ]]; then
-  echo -e "\nYou need install all dependencies before make $_TARGET!\n";
-  exit 1;
+  echo -e "\n[DIONE] You need install all dependencies before make $_TARGET!\n";
+  exit 2;
 fi
-
-echo -e "\nAll $_TARGET dependencies are Ok!\n";

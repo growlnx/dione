@@ -2,7 +2,8 @@
 #include "driver.hh"
 #include <iostream>
 
-namespace cli = oberon::cli;
+namespace cli = dione::cli;
+namespace driver = dione::driver;
 
 int
 main(int argc, char* argv[])
@@ -13,7 +14,7 @@ main(int argc, char* argv[])
   if (args == nullptr)
     return 1;
 
-  Driver driver;
+  driver::Driver driver;
   driver.trace_parsing = args->parseTrace;
   driver.trace_scanning = args->lexerTrace;
 

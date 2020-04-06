@@ -1,5 +1,4 @@
 namespace std 
 {
-    -- fibonacci function
-    
+    -- fibonacci function 
 }

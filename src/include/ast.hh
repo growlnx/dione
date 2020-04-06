@@ -2,14 +2,13 @@
 
 #include <string>
 
-namespace oberon {
+namespace dione {
 namespace ast {
 
-struct Oberon;
+struct Dione;
 struct Block;
 struct Expression;
 struct Assign;
-struct Operator;
 struct Number;
 struct Object;
 struct FunctionCall;
@@ -17,34 +16,43 @@ struct Var;
 struct CmdList;
 struct Namespace;
 
-struct Oberon
+struct Dione
 {
   Block* block;
+
+  virtual ~Dione();
+  void print();
 };
 
 struct Expression
 {
   Object* object;
   Expression *expr, *lExpr, *rExpr;
-  Operator* op;
+  
+  bool operatorPlus = false, operatorMinus = false, 
+       operatorMult = false, operatorDiv = false,
+       operatorMod = false;
+
+  virtual ~Expression();
+  void print(int level);
 };
 
 struct Assign
 {
   Expression* expr;
   Var* var;
-};
 
-struct Operator
-{
-  bool minus = false, plus = false, mult = false, div = false, mod = false,
-       lAssign = false, rAssign = false;
+  virtual ~Assign();
+  void print(int level);
 };
 
 struct Number
 {
   int* integer;
   float* real;
+
+  virtual ~Number();
+  void print(int level);
 };
 
 struct Object
@@ -53,23 +61,27 @@ struct Object
   Number* number;
   std::string* text;
   bool* logic;
+  
+  virtual ~Object();
+  void print(int level);
 };
 
-struct functionCall
+struct FunctionCall
 {
   // TODO
+  void print(int level);
 };
 
 struct CmdList
 {
   // TODO
+  void print(int level);
 };
 
-
-struct Namespace
+struct Block
 {
-  CmdList* cmdList;
-  Namespace* _namespace;
+  // TODO
+  void print(int level);
 };
 
 }

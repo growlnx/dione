@@ -2,7 +2,7 @@
 #include <string>
 #include <iostream>
 
-namespace cli = oberon::cli;
+namespace cli = dione::cli;
 
 cli::Cli* 
 cli::parse(int argc, char** argv)

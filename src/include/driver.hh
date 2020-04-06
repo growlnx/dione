@@ -6,12 +6,14 @@
 
 // Tell Flex the lexer's prototype ...
 # define YY_DECL \
-  yy::Parser::symbol_type yylex (Driver& driver)
+  yy::Parser::symbol_type yylex (driver::Driver& driver)
 
 // ... and declare it for the parser's sake.
 YY_DECL;
 
-// Conducting the whole scanning and parsing of Oberon.
+namespace dione {
+namespace driver {
+// Conducting the whole scanning and parsing of Dione.
 struct Driver
 {
  
@@ -31,7 +33,8 @@ struct Driver
   int parse (const std::string& f);
   
   // Error handling.
-  void error (const yy::location& loc, const std::string& msg);
-  void error (const std::string& msg);
+  void error(const yy::location& loc, const std::string& msg);
+  void error(const std::string& msg);
 };
-
+}
+}

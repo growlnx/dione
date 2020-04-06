@@ -1,6 +1,5 @@
 %{ 
 /* -*- C++ -*- */
-#include <cerrno>
 #include <climits>
 #include <cstdlib>
 #include <string>
@@ -68,6 +67,10 @@ loc.step ();
             return yy::Parser::make_DIV(loc);
           }
 
+"%"       {
+            return yy::Parser::make_MOD(loc);
+          }
+
 "("       {
             return yy::Parser::make_L_PRT(loc);
           }
@@ -100,20 +103,44 @@ loc.step ();
             return yy::Parser::make_DCL(loc);
           }
 
+"t"       {
+            return yy::Parser::make_LOGIC(true, loc);
+          }
+
+"f"       {
+            return yy::Parser::make_LOGIC(false, loc);
+          }
+
 "as"      {
             return yy::Parser::make_AS(loc);
           }
 
-"namespace" {
-              return yy::Parser::make_NAMESPACE(loc);
-            }
-
-"::"      {
-            return yy::Parser::make_NAMESPACE_SEP(loc);
+"import"  {
+            return yy::Parser::make_IMPORT(loc);
           }
 
-"extern"  {
-            return yy::Parser::make_EXTERN(loc);
+"export"  {
+            return yy::Parser::make_EXPORT(loc);
+          }
+
+"while"   {
+            return yy::Parser::make_WHILE(loc);
+          }
+
+"for"     {
+            return yy::Parser::make_FOR(loc);
+          }
+
+"if"      {
+            return yy::Parser::make_IF(loc);
+          }
+
+"elsif"   {
+            return yy::Parser::make_ELSIF(loc);
+          }
+
+"else"    {
+            return yy::Parser::make_ELSE(loc);
           }
 
 {int}     {
@@ -146,23 +173,3 @@ loc.step ();
             return yy::Parser::make_END(loc);
           }
 %%
-
-void
-Driver::scan_begin() 
-{
-  yy_flex_debug = trace_scanning;
-
-  if (file.empty () || file == "stdin") {
-    yyin = stdin;
-  
-  } else if (!(yyin = fopen (file.c_str (), "r"))) {
-    error("cannot open " + file + ": " + strerror(errno));
-    exit(EXIT_FAILURE);
-  }
-}
-
-void
-Driver::scan_end()
-{
-  fclose(yyin);
-}

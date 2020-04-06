@@ -1,30 +1,27 @@
 %skeleton "lalr1.cc" /* -*- C++ -*- */
-
 %require "3.2"
-
 %defines
-
 %define api.parser.class {Parser}
-
 %define api.token.constructor
-
 %define api.value.type variant
-
 %define parse.assert
-
 %code requires {
 
 #include <string>
 #include "ast.hh"
 
+namespace dione {
+namespace driver {
 class Driver;
+}
+}
 
-namespace ast = oberon::ast;
-
+namespace ast = dione::ast;
+namespace driver = dione::driver;
 }
 
 // The parsing context.
-%param { Driver& driver }
+%param { driver::Driver& driver }
 
 %locations
 
@@ -41,9 +38,9 @@ namespace ast = oberon::ast;
 %code {
 
 #include "driver.hh"
-//#include "ast.hh"
+#include "ast.hh"
 
-//namespace ast = oberon::ast;
+namespace ast = dione::ast;
 
 }
 
@@ -66,9 +63,13 @@ namespace ast = oberon::ast;
 %token MOD "%"
 %token COMMA ","
 %token AS "as"
-%token EXTERN "extern"
-%token NAMESPACE "namespace"
-%token NAMESPACE_SEP "->"
+%token IMPORT "import"
+%token EXPORT "export"
+%token WHILE "while"
+%token FOR "for"
+%token IF "if"
+%token ELSIF "elsif"
+%token ELSE "else"
 
 // ast leafs tokens with values
 %token <bool> LOGIC "logic data type"
@@ -83,120 +84,63 @@ namespace ast = oberon::ast;
 %token <std::string> DATA_ID "data type identifier"
 
 // ast nodes
-%type <ast::Oberon*> oberon "oberon"
-%type <ast::Block*> namespaceBlock "block"
+%type <ast::Dione*> dione "dione program"
 %type <ast::Expression*> expr "expression"
 %type <ast::Number*> number "number"
 %type <ast::Object*> object "object"
 %type <ast::FunctionCall*> fcn_call "function call"
-%type <ast::Assign*> assign "assignment"
-%type <ast::CmdList*> namespaceCmdList "Command List"
-%type <ast::Namespace*> namespace;
+//%type <ast::Assign*> assign "assignment"
 
 %printer { yyoutput << $$; } <*>;
 
-%start oberon;
+%start dione;
+
+// precedence, minor first
+%left MINUS PLUS
+%left MULT DIV
 
 %%
 
-oberon: 
-  namespace 
-  { 
-    // TODO: store ast in driver 
+dione:
+  expr 
+  {
+    $1->print(1);
   }
   ;
-
-namespace:
-  NAMESPACE namespaceId namespaceBlock
-  {
-    
-  }
-  ;
-
-namespaceId:
-  VAR_ID
-  {
-
-  }
-  | namespaceId NAMESPACE_SEP namespaceId
-  {
-
-  }
-  ;
-
-namespaceBlock:
-  L_BRC namespaceCmdList R_BRC
-  {
-    // TODO
-  }
-  ;
-
-namespaceCmdList: 
-  | namespace
-  | varDef namespaceCmdList
-  {
-    // TODO
-  }
-  | fcnDef namespaceCmdList
-  {
-    // TODO
-  }
-  ;
-
-varDef:
-  DCL VAR_ID AS DATA_ID
-  {
-    // TODO
-  }
-  | DCL VAR_ID AS DATA_ID L_ASS EXTERN
-  {
-    // TODO
-  }
-  | DCL VAR_ID AS DATA_ID L_ASS expr
-  {
-    // TODO
-  }
-  ;
-
-fcnDef:
-  DCL FCN_ID AS DATA_ID L_ASS
-  {
-    // TODO
-  }
-  ;
-
 
 object:
   LOGIC
   {
-    // TODO
-       
+    $$ = new ast::Object();
+    $$->logic = new bool($1);   
   }
   | TEXT
   {
     // TODO
-  
   }
   | number
   {
-    // TODO
-  
+    $$ = new ast::Object();
+    $$->number = $1;
   }
   | fcn_call
   {
-    // TODO
-  
+    // TODO  
   }
   ;
 
 number:
   REAL
   {
-    // TODO
+    $$ = new ast::Number();
+    $$->real = new float;
+    *$$->real = $1;
   } 
   | DEC_INTEGER
   {
-    // TODO
+    $$ = new ast::Number();
+    $$->integer = new int;
+    *$$->integer = $1;
   }
   // | BIN_INTEGER
   // {
@@ -226,42 +170,47 @@ object_list:
 expr:
   | object
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->object = $1;
   }
   | L_PRT expr R_PRT
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->expr = $2;
   }
-  | expr op expr
+  | expr MINUS expr
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->lExpr = $1;
+    $$->operatorMinus = true;
+    $$->rExpr = $3;
   }
-  ;
-
-op: 
-  MINUS 
+  | expr PLUS expr
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->lExpr = $1;
+    $$->operatorPlus = true;
+    $$->rExpr = $3;
   }
-  | PLUS 
+  | expr MULT expr
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->lExpr = $1;
+    $$->operatorMult = true;
+    $$->rExpr = $3;
   }
-  | MULT 
+  | expr DIV expr
   {
-    // TODO
+    $$ = new ast::Expression();
+    $$->lExpr = $1;
+    $$->operatorDiv = true;
+    $$->rExpr = $3;
   }
-  | DIV 
+  | expr MOD expr
   {
-    // TODO
-  }
-  | MOD
-  {
-    // TODO
-  }
-  | SWAP
-  {
-    // TODO
+    $$->lExpr = $1;
+    $$->operatorMod = true;
+    $$->rExpr = $3;
   }
   ;
 

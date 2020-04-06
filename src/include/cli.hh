@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 
-namespace oberon {
+namespace dione {
 namespace cli {
 
 struct Cli {
@@ -21,5 +21,5 @@ void
 help();
 
 } // cli
-} // oberon
+} // dione
 
