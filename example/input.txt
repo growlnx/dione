@@ -1,4 +1,19 @@
-namespace std 
-{
-    -- fibonacci function 
+-- exported pure function
+
+import {
+
 }
+
+declare Sum( a as ~i32, b as ~i32) pure as ~i32 
+{
+  return a + b
+}
+
+
+
+
+-- void function or procedure
+
+-- lambda or anonymous function
+map(arr, lambda( x as ~str~ptr) { x+=1 })
+

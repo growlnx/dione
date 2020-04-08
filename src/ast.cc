@@ -33,25 +33,29 @@ ast::Expression::print(int level)
   std::cout << std::string(level, ' ') << "expression : {" << std::endl;
 
   if (object != nullptr)
-    object->print(level + 1);
-
+    object->print(level);
+  
   else if (expr != nullptr)
-    expr->print(level + 1);
+    expr->print(level);
   
   else if (lExpr != nullptr and rExpr != nullptr) {
     
     std::cout << std::string(level+1,' ') << "operator : ";
 
     if (operatorMinus)
-      std::cout << "-," << std::endl;
+      std::cout << "-" << std::endl;
+    
     else if (operatorPlus)
-      std::cout << "+," << std::endl;
+      std::cout << "+" << std::endl;
+    
     else if (operatorMult)
-      std::cout << "*," << std::endl;
+      std::cout << "*" << std::endl;
+    
     else if (operatorDiv)
-      std::cout << "/," << std::endl;
+      std::cout << "/" << std::endl;
+    
     else if (operatorMod)
-      std::cout << "%," << std::endl;
+      std::cout << "%" << std::endl;
 
     lExpr->print(level);
     rExpr->print(level);
@@ -103,11 +107,11 @@ ast::Object::print(int level)
     number->print(level);
 
   else if (text != nullptr)
-    std::cout << std::string("--", level + 1) << "\"text\" : " << text
+    std::cout << std::string(level + 1, ' ') << "\"text\" : " << text
               << std::endl;
 
   else if (logic != nullptr)
-    std::cout << std::string("--", level + 1)
+    std::cout << std::string(level + 1, ' ')
               << "\"logic\" : " << ((*logic) ? "true" : "false") << std::endl;
 
   std::cout << std::string(level, ' ') << "}" << std::endl;

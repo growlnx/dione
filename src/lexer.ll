@@ -99,15 +99,19 @@ loc.step ();
             return yy::Parser::make_SWAP(loc);
           }
 
-"dcl"     {
+"pure"    {
+            return yy::Parser::make_PURE(loc);
+          }
+
+"declare" {
             return yy::Parser::make_DCL(loc);
           }
 
-"t"       {
+"true"    {
             return yy::Parser::make_LOGIC(true, loc);
           }
 
-"f"       {
+"false"   {
             return yy::Parser::make_LOGIC(false, loc);
           }
 
@@ -152,6 +156,13 @@ loc.step ();
             
             return yy::Parser::make_DEC_INTEGER(n, loc);
           }
+
+{int}\.{int} {
+               errno = 0;
+               double n = strtod(yytext, NULL);
+               // TODO: error handling here
+               return yy::Parser::make_REAL(n, loc);
+             }
 
 [a-z]{id} { 
             return yy::Parser::make_VAR_ID(yytext, loc);

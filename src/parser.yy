@@ -8,7 +8,10 @@
 %code requires {
 
 #include <string>
+#include <iostream>
 #include "ast.hh"
+
+#define YYDEBUG 1
 
 namespace dione {
 namespace driver {
@@ -32,7 +35,6 @@ namespace driver = dione::driver;
 };
 
 %define parse.trace
-
 %define parse.error verbose
 
 %code {
@@ -70,6 +72,7 @@ namespace ast = dione::ast;
 %token IF "if"
 %token ELSIF "elsif"
 %token ELSE "else"
+%token PURE "pure"
 
 // ast leafs tokens with values
 %token <bool> LOGIC "logic data type"
@@ -98,13 +101,14 @@ namespace ast = dione::ast;
 // precedence, minor first
 %left MINUS PLUS
 %left MULT DIV
+%precedence NEG  
 
 %%
 
 dione:
   expr 
   {
-    $1->print(1);
+    $1->print(0);
   }
   ;
 
@@ -118,7 +122,7 @@ object:
   {
     // TODO
   }
-  | number
+  | number 
   {
     $$ = new ast::Object();
     $$->number = $1;
@@ -130,12 +134,25 @@ object:
   ;
 
 number:
-  REAL
+  NEG REAL
   {
     $$ = new ast::Number();
     $$->real = new float;
-    *$$->real = $1;
-  } 
+    *$$->real = -$2;
+  }
+  | REAL 
+  {
+    $$ = new ast::Number();
+    $$->real = new float;
+    *$$->real - $1;
+  }
+  | NEG DEC_INTEGER
+  {
+    std::cout << "NEG INT"; 
+    $$ = new ast::Number();
+    $$->integer = new int;
+    *$$->integer = -$2;
+  }
   | DEC_INTEGER
   {
     $$ = new ast::Number();
@@ -176,14 +193,68 @@ expr:
   | L_PRT expr R_PRT
   {
     $$ = new ast::Expression();
-    $$->expr = $2;
+
+    if($2->object != nullptr) { 
+
+      #if YYDEBUG
+      std::cout << "Dione:" << @2 << ": (object) -> object" << std::endl;
+      #endif
+
+      $$->object = new ast::Object();
+      *$$->object = *$2->object;
+      delete $2;
+  
+    } else if ($2->expr != nullptr) { 
+      
+      #if YYDEBUG
+        std::cout << "Dione:" << @2 <<  ": ((expr)) -> (expr)" << std::endl;
+      #endif
+
+      $$->expr = new ast::Expression();
+      *$$->expr = *$2->expr;
+      delete $2;
+
+    } else {
+      $$->expr = $2;  
+    }
+   
   }
   | expr MINUS expr
   {
     $$ = new ast::Expression();
-    $$->lExpr = $1;
-    $$->operatorMinus = true;
-    $$->rExpr = $3;
+    
+    if($1->object != nullptr and $3->object != nullptr){ 
+      $$->object = new ast::Object();
+
+      if( $1->object->number != nullptr and $3->object->number != nullptr) {
+        $$->object->number = new ast::Number();
+        
+        if($1->object->number->real != nullptr and $3->object->number->real != nullptr) {
+          $$->object->number->real = new float;
+          *$$->object->number->real = *$1->object->number->real - *$3->object->number->real;
+
+        } else if($1->object->number->real != nullptr and $3->object->number->integer != nullptr) {
+          $$->object->number->real = new float;
+          *$$->object->number->real = *$1->object->number->real - *$3->object->number->integer;
+        
+        } else if($1->object->number->integer != nullptr and $3->object->number->real != nullptr) {
+          $$->object->number->real = new float;
+          *$$->object->number->real = *$1->object->number->integer - *$3->object->number->real;
+        
+        } else if($1->object->number->integer != nullptr and $3->object->number->integer != nullptr) {
+          $$->object->number->integer = new int;
+          *$$->object->number->integer = *$1->object->number->integer - *$3->object->number->integer;
+        }
+
+        delete $1;
+        delete $3;
+      }
+
+    } else {
+      $$->lExpr = $1;
+      $$->operatorMinus = true;
+      $$->rExpr = $3;
+    }
   }
   | expr PLUS expr
   {
@@ -207,10 +278,33 @@ expr:
     $$->rExpr = $3;
   }
   | expr MOD expr
-  {
-    $$->lExpr = $1;
-    $$->operatorMod = true;
-    $$->rExpr = $3;
+  { 
+    $$ = new ast::Expression();
+
+    if ($1->object != nullptr and $3->object != nullptr) {
+      $$->object = new ast::Object();
+      
+      if($1->object->number != nullptr and $3->object->number != nullptr) {
+        $$->object->number = new ast::Number();
+
+        if($1->object->number->real != nullptr or $3->object->number->real != nullptr) {
+          yy::Parser::error(@2, "Semantic error, \% is not defined for real numbers");
+          YYABORT;
+        } 
+
+        if($1->object->number->integer != nullptr and $3->object->number->integer != nullptr) {
+           $$->object->number->integer = new int;
+           *$$->object->number->integer = *$1->object->number->integer % *$3->object->number->integer;
+           delete $1;
+           delete $3;
+        }
+
+      }
+    } else {
+      $$->lExpr = $1;
+      $$->operatorMod = true;
+      $$->rExpr = $3;
+    }
   }
   ;
 
