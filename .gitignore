@@ -3,6 +3,6 @@ bin/
 obj/
 src/lexer.cc
 src/parser.cc
-src/include/parser.hh
-src/include/location.hh
-src/include/stack.hh
+src/parser.hh
+src/location.hh
+src/stack.hh
