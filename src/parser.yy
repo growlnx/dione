@@ -1,10 +1,12 @@
 %skeleton "lalr1.cc" /* -*- C++ -*- */
 %require "3.2"
+
 %defines
 %define api.parser.class {Parser}
 %define api.token.constructor
 %define api.value.type variant
 %define parse.assert
+
 %code requires {
 
 #include <string>
@@ -21,6 +23,7 @@ class Driver;
 
 namespace ast = dione::ast;
 namespace driver = dione::driver;
+
 }
 
 // The parsing context.
@@ -38,17 +41,14 @@ namespace driver = dione::driver;
 %define parse.error verbose
 
 %code {
-
 #include "driver.hh"
 #include "ast.hh"
 
 namespace ast = dione::ast;
-
 }
 
 %define api.token.prefix {TOK_}
 
-// ast leafs tokens
 %token DCL "dcl"
 %token END 0 "end of file"
 %token SWAP ">.<"
@@ -74,10 +74,9 @@ namespace ast = dione::ast;
 %token ELSE "else"
 %token PURE "pure"
 
-// ast leafs tokens with values
 %token <bool> LOGIC "logic data type"
 %token <std::string> TEXT "text data type"
-// TODO: implement 0b0.. and 0x0.. integer tokens
+// TODO: implementar 0b0.. and 0x0.. integer tokens
 // %token <int> BIN_INTEGER "binary integer data type"
 // %token <int> HEX_INTEGER "hexadecimal integer data type"
 %token <int> DEC_INTEGER "decimal integer data type"
@@ -87,26 +86,24 @@ namespace ast = dione::ast;
 %token <std::string> DATA_ID "data type identifier"
 
 // ast nodes
-%type <ast::Dione*> dione "dione program"
-%type <ast::Expression*> expr "expression"
-%type <ast::Number*> number "number"
-%type <ast::Object*> object "object"
-%type <ast::FunctionCall*> fcn_call "function call"
+%type <std::unique_ptr<ast::Dione>> dione "dione program"
+%type <std::unique_ptr<ast::Expression>> expr "expression"
+%type <std::unique_ptr<ast::Number>> number "number"
+%type <std::unique_ptr<ast::Object>> object "object"
+%type <std::unique_ptr<ast::FunctionCall>> fcn_call "function call"
 //%type <ast::Assign*> assign "assignment"
-
-%printer { yyoutput << $$; } <*>;
 
 %start dione;
 
 // precedence, minor first
 %left MINUS PLUS
 %left MULT DIV
-%precedence NEG  
+%precedence NEG POS
 
 %%
 
 dione:
-  expr 
+  expr
   {
     $1->print(0);
   }
@@ -115,59 +112,45 @@ dione:
 object:
   LOGIC
   {
-    $$ = new ast::Object();
-    $$->logic = new bool($1);   
+    *$$->logic = $1;
   }
   | TEXT
   {
     // TODO
   }
-  | number 
+  | number
   {
-    $$ = new ast::Object();
-    $$->number = $1;
+    $$ = std::make_unique<ast::Object>();
+    $$->number =std::move($1);
   }
   | fcn_call
   {
-    // TODO  
+    // TODO
   }
   ;
 
 number:
-  NEG REAL
+  REAL
   {
-    $$ = new ast::Number();
-    $$->real = new float;
-    *$$->real = -$2;
-  }
-  | REAL 
-  {
-    $$ = new ast::Number();
-    $$->real = new float;
-    *$$->real - $1;
-  }
-  | NEG DEC_INTEGER
-  {
-    std::cout << "NEG INT"; 
-    $$ = new ast::Number();
-    $$->integer = new int;
-    *$$->integer = -$2;
+     $$ = std::make_unique<ast::Number>();
+    *$$->real = $1;
   }
   | DEC_INTEGER
   {
-    $$ = new ast::Number();
-    $$->integer = new int;
+    $$ = std::make_unique<ast::Number>();
+    $$->integer = std::make_unique<int>();
     *$$->integer = $1;
   }
-  // | BIN_INTEGER
-  // {
-  //   // TODO
-  // }
-  // | HEX_INTEGER
-  // {
-  //   // TODO
-  // }
+  //| BIN_INTEGER
+  //{
+  //  // TODO
+  //}
+  //| HEX_INTEGER
+  //{
+  //  // TODO
+  //}
   ;
+
 
 fcn_call:
   FCN_ID L_PRT object_list R_PRT
@@ -181,130 +164,58 @@ object_list:
   | object_list COMMA object_list
   {
     // TODO
-  } 
+  }
   ;
 
 expr:
-  | object
+  object
   {
-    $$ = new ast::Expression();
-    $$->object = $1;
+    $$ = std::make_unique<ast::Expression>();
+    $$->object = std::move($1);
   }
   | L_PRT expr R_PRT
   {
-    $$ = new ast::Expression();
+    $$ = std::make_unique<ast::Expression>();
 
-    if($2->object != nullptr) { 
+    if($2->object) {
 
       #if YYDEBUG
-      std::cout << "Dione:" << @2 << ": (object) -> object" << std::endl;
+        std::cout << "Dione:" << @2 << ": (object) -> object" << std::endl;
       #endif
 
-      $$->object = new ast::Object();
-      *$$->object = *$2->object;
-      delete $2;
-  
-    } else if ($2->expr != nullptr) { 
+      $$->object = std::move($2->object);
+
+    } else if ($2->expr) {
       
       #if YYDEBUG
         std::cout << "Dione:" << @2 <<  ": ((expr)) -> (expr)" << std::endl;
       #endif
 
-      $$->expr = new ast::Expression();
-      *$$->expr = *$2->expr;
-      delete $2;
-
+      $$->expr = std::move($2->expr);
+    
     } else {
-      $$->expr = $2;  
+      $$->expr = std::move($2);
     }
-   
   }
   | expr MINUS expr
   {
-    $$ = new ast::Expression();
-    
-    if($1->object != nullptr and $3->object != nullptr){ 
-      $$->object = new ast::Object();
-
-      if( $1->object->number != nullptr and $3->object->number != nullptr) {
-        $$->object->number = new ast::Number();
-        
-        if($1->object->number->real != nullptr and $3->object->number->real != nullptr) {
-          $$->object->number->real = new float;
-          *$$->object->number->real = *$1->object->number->real - *$3->object->number->real;
-
-        } else if($1->object->number->real != nullptr and $3->object->number->integer != nullptr) {
-          $$->object->number->real = new float;
-          *$$->object->number->real = *$1->object->number->real - *$3->object->number->integer;
-        
-        } else if($1->object->number->integer != nullptr and $3->object->number->real != nullptr) {
-          $$->object->number->real = new float;
-          *$$->object->number->real = *$1->object->number->integer - *$3->object->number->real;
-        
-        } else if($1->object->number->integer != nullptr and $3->object->number->integer != nullptr) {
-          $$->object->number->integer = new int;
-          *$$->object->number->integer = *$1->object->number->integer - *$3->object->number->integer;
-        }
-
-        delete $1;
-        delete $3;
-      }
-
-    } else {
-      $$->lExpr = $1;
-      $$->operatorMinus = true;
-      $$->rExpr = $3;
-    }
+    // TODO
   }
   | expr PLUS expr
   {
-    $$ = new ast::Expression();
-    $$->lExpr = $1;
-    $$->operatorPlus = true;
-    $$->rExpr = $3;
+    // TODO
   }
   | expr MULT expr
   {
-    $$ = new ast::Expression();
-    $$->lExpr = $1;
-    $$->operatorMult = true;
-    $$->rExpr = $3;
+    // TODO
   }
   | expr DIV expr
   {
-    $$ = new ast::Expression();
-    $$->lExpr = $1;
-    $$->operatorDiv = true;
-    $$->rExpr = $3;
+    // TODO
   }
   | expr MOD expr
-  { 
-    $$ = new ast::Expression();
-
-    if ($1->object != nullptr and $3->object != nullptr) {
-      $$->object = new ast::Object();
-      
-      if($1->object->number != nullptr and $3->object->number != nullptr) {
-        $$->object->number = new ast::Number();
-
-        if($1->object->number->real != nullptr or $3->object->number->real != nullptr) {
-          yy::Parser::error(@2, "Semantic error, \% is not defined for real numbers");
-          YYABORT;
-        } 
-
-        if($1->object->number->integer != nullptr and $3->object->number->integer != nullptr) {
-           $$->object->number->integer = new int;
-           *$$->object->number->integer = *$1->object->number->integer % *$3->object->number->integer;
-           delete $1;
-           delete $3;
-        }
-
-      }
-    } else {
-      $$->lExpr = $1;
-      $$->operatorMod = true;
-      $$->rExpr = $3;
-    }
+  {
+    // TODO    
   }
   ;
 
@@ -316,7 +227,7 @@ assign:
   | expr R_ASS VAR_ID
   {
     // TODO
-  } 
+  }
   ;
 
 %%

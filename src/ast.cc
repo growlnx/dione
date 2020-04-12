@@ -1,13 +1,7 @@
 #include "ast.hh"
-#include <iomanip>
 #include <iostream>
 
 namespace ast = dione::ast;
-
-ast::Dione::~Dione()
-{
-  // TODO
-}
 
 void
 // ast root
@@ -15,14 +9,11 @@ ast::Dione::print()
 {
   int level = 0;
   std::cout << "dione : {" << std::endl;
+
   if (block != nullptr)
     block->print(level++);
-  std::cout << "}" << std::endl;
-}
 
-ast::Expression::~Expression()
-{
-  // TODO
+  std::cout << "}" << std::endl;
 }
 
 void
@@ -64,16 +55,6 @@ ast::Expression::print(int level)
   std::cout << std::string(level, ' ') << "}" << std::endl;
 }
 
-/*ast::Operator::~Operator()
-{
-  //TODO
-}*/
-
-ast::Number::~Number()
-{
-  // TODO
-}
-
 void
 ast::Number::print(int level)
 {
@@ -86,11 +67,6 @@ ast::Number::print(int level)
 
   else if (real != nullptr)
     std::cout << *real << std::endl;
-}
-
-ast::Object::~Object()
-{
-  // TODO
 }
 
 void
@@ -107,7 +83,7 @@ ast::Object::print(int level)
     number->print(level);
 
   else if (text != nullptr)
-    std::cout << std::string(level + 1, ' ') << "\"text\" : " << text
+    std::cout << std::string(level + 1, ' ') << "\"text\" : " << *text
               << std::endl;
 
   else if (logic != nullptr)

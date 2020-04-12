@@ -177,7 +177,9 @@ loc.step ();
           }
 
 .         {
-            driver.error (loc, "invalid token: "+std::string(yytext));
+            // driver.error (loc, "invalid token: "+std::string(yytext));
+            std::cerr << "[DIONE]:" << loc << ": Lexical error, invalid token: "+std::string(yytext) << std::endl;
+            std::exit(1);
           }
 
 <<EOF>>   { 
