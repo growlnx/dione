@@ -47,28 +47,28 @@ loc.step ();
           }
 
 "--".*    {
-            // ignore comments
+            // comentário até newline
             loc.step();
           }
 
 "-"       {
-            return yy::Parser::make_MINUS(loc);
+            return yy::Parser::make_MINUS(ast::op_type::MINUS, loc);
           }
 
 "+"       {
-            return yy::Parser::make_PLUS(loc);
+            return yy::Parser::make_PLUS(ast::op_type::PLUS, loc);
           }
 
 "*"       {
-            return yy::Parser::make_MULT(loc);
+            return yy::Parser::make_MULT(ast::op_type::MULT, loc);
           }
 
 "/"       {
-            return yy::Parser::make_DIV(loc);
+            return yy::Parser::make_DIV(ast::op_type::DIV, loc);
           }
 
 "%"       {
-            return yy::Parser::make_MOD(loc);
+            return yy::Parser::make_MOD(ast::op_type::MOD, loc);
           }
 
 "("       {
@@ -171,6 +171,11 @@ loc.step ();
 [A-Z]{id} {
             return yy::Parser::make_FCN_ID(yytext, loc);
           }
+
+\"(\\.|[^"\\])*\" {
+                    std::string str(yytext);
+                    return yy::Parser::make_TEXT(str.substr(1,str.size()-2), loc);
+                  }
 
 ~{id}     {
             return yy::Parser::make_DATA_ID(yytext, loc);

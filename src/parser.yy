@@ -49,20 +49,15 @@ namespace ast = dione::ast;
 
 %define api.token.prefix {TOK_}
 
-%token DCL "dcl"
+%token DCL "declare"
 %token END 0 "end of file"
-%token SWAP ">.<"
-%token L_ASS ".<"
-%token R_ASS ">."
+%token SWAP "><"
+%token L_ASS "<<"
+%token R_ASS ">>"
 %token L_PRT "("
 %token R_PRT ")"
 %token L_BRC "{"
 %token R_BRC "}"
-%token MINUS "-"
-%token PLUS "+"
-%token MULT "*"
-%token DIV "/"
-%token MOD "%"
 %token COMMA ","
 %token AS "as"
 %token IMPORT "import"
@@ -73,6 +68,12 @@ namespace ast = dione::ast;
 %token ELSIF "elsif"
 %token ELSE "else"
 %token PURE "pure"
+
+%token <ast::op_type> MINUS "-"
+%token <ast::op_type> PLUS "+"
+%token <ast::op_type> MULT  "*"
+%token <ast::op_type> DIV "/"
+%token <ast::op_type> MOD "%"
 
 %token <bool> LOGIC "logic data type"
 %token <std::string> TEXT "text data type"
@@ -116,12 +117,11 @@ object:
   }
   | TEXT
   {
-    // TODO
+    $$ = std::make_unique<ast::Object>($1);
   }
   | number
   {
-    $$ = std::make_unique<ast::Object>();
-    $$->number =std::move($1);
+    $$ = std::make_unique<ast::Object>(std::move($1));
   }
   | fcn_call
   {
@@ -132,14 +132,11 @@ object:
 number:
   REAL
   {
-     $$ = std::make_unique<ast::Number>();
-    *$$->real = $1;
+    $$ = std::make_unique<ast::Number>($1);
   }
   | DEC_INTEGER
   {
-    $$ = std::make_unique<ast::Number>();
-    $$->integer = std::make_unique<int>();
-    *$$->integer = $1;
+    $$ = std::make_unique<ast::Number>($1);
   }
   //| BIN_INTEGER
   //{
@@ -170,52 +167,50 @@ object_list:
 expr:
   object
   {
-    $$ = std::make_unique<ast::Expression>();
-    $$->object = std::move($1);
+    $$ = std::make_unique<ast::Expression>(std::move($1));
   }
   | L_PRT expr R_PRT
   {
-    $$ = std::make_unique<ast::Expression>();
-
-    if($2->object) {
-
-      #if YYDEBUG
-        std::cout << "Dione:" << @2 << ": (object) -> object" << std::endl;
-      #endif
-
-      $$->object = std::move($2->object);
-
-    } else if ($2->expr) {
-      
-      #if YYDEBUG
-        std::cout << "Dione:" << @2 <<  ": ((expr)) -> (expr)" << std::endl;
-      #endif
-
-      $$->expr = std::move($2->expr);
-    
-    } else {
-      $$->expr = std::move($2);
-    }
+    $$ = std::make_unique<ast::Expression>(std::move($2));
   }
   | expr MINUS expr
   {
-    // TODO
+    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
+
   }
   | expr PLUS expr
   {
-    // TODO
+    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
   }
   | expr MULT expr
   {
-    // TODO
+    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
   }
   | expr DIV expr
   {
-    // TODO
+    // TODO:
+    // - verificar se operando é nulo
+    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
   }
   | expr MOD expr
-  {
-    // TODO    
+  { 
+    // mod é uma operação matemática definida para números inteiros.   
+    if(not ($1->object and $1->object->number and $3->object and $3->object->number)) {
+      error(@2, "Semantic error, mod operation can be done only with numbers");
+      YYABORT;
+    } 
+
+    if($1->object->number->real) {
+      // TODO: emitir nota informando o casting forçado
+      $1->object->number->integer = std::make_unique<int>((int) *$1->object->number->real);
+    }
+
+    if($3->object->number->real) {
+      // TODO: emitir nota informando o casting forçado
+      $3->object->number->integer = std::make_unique<int>((int) *$3->object->number->real);
+    }
+
+    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
   }
   ;
 

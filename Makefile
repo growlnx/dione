@@ -24,12 +24,17 @@ build:
 	
 	mkdir -p $(DEST) $(OBJ)
 
-	$(CC) -o $(OBJ)/driver.o     -c $(SRC)/driver.cc
-	$(CC) -o $(OBJ)/parser.o     -c $(SRC)/parser.cc
-	$(CC) -o $(OBJ)/ast.o        -c $(SRC)/ast.cc
-	$(CC) -o $(OBJ)/lexer.o      -c $(SRC)/lexer.cc
-	$(CC) -o $(OBJ)/$(PROJECT).o -c $(SRC)/$(PROJECT).cc
-	$(CC) -o $(OBJ)/cli.o        -c $(SRC)/cli.cc
+	$(CC) -o $(OBJ)/driver.o     		-c $(SRC)/driver.cc
+	$(CC) -o $(OBJ)/parser.o     		-c $(SRC)/parser.cc
+	$(CC) -o $(OBJ)/dione_ast.o   		-c $(SRC)/dione_ast.cc
+	$(CC) -o $(OBJ)/number_ast.o   		-c $(SRC)/number_ast.cc
+	$(CC) -o $(OBJ)/object_ast.o   		-c $(SRC)/object_ast.cc
+	$(CC) -o $(OBJ)/expression_ast.o   	-c $(SRC)/expression_ast.cc
+	$(CC) -o $(OBJ)/block_ast.o   		-c $(SRC)/block_ast.cc
+	$(CC) -o $(OBJ)/function_call_ast.o -c $(SRC)/function_call_ast.cc
+	$(CC) -o $(OBJ)/lexer.o      		-c $(SRC)/lexer.cc
+	$(CC) -o $(OBJ)/$(PROJECT).o 		-c $(SRC)/$(PROJECT).cc
+	$(CC) -o $(OBJ)/cli.o        		-c $(SRC)/cli.cc
 	
 	$(CC) -o $(DEST)/$(PROJECT) $(CFLAGS) $(OBJ)/*.o
 	@echo   "[DIONE] build finished"
