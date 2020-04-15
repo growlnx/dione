@@ -1,25 +1,22 @@
 #pragma once
 
-#include <vector>
 #include <string>
+#include <vector>
 
 namespace dione {
 namespace cli {
 
-struct Cli {
+struct Cli
+{
   std::vector<std::string> fileNames;
   unsigned verboseLevel;
   bool lexerTrace = false, parseTrace = false;
+
+  Cli(int argc, char** argv);
+
+  // exibe mensagem de ajuda
+  void help();
 };
-
-Cli* 
-// do cli args parsing
-parse(int argc, char** argv);
-
-void
-// show help msg
-help();
 
 } // cli
 } // dione
-

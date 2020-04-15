@@ -88,9 +88,9 @@ ast::Number::sub(std::unique_ptr<ast::Number> number)
 std::unique_ptr<ast::Number>
 ast::Number::mult(std::unique_ptr<ast::Number> number)
 {
-  if (not number) {
+  if (not number)
     return nullptr;
-  }
+
   if (this->integer and number->integer) {
     return std::move(
       std::make_unique<ast::Number>(*this->integer * *number->integer));
@@ -140,7 +140,7 @@ ast::Number::div(std::unique_ptr<ast::Number> number)
 std::unique_ptr<ast::Number>
 ast::Number::mod(std::unique_ptr<ast::Number> number)
 {
-  if (not(number))
+  if (not number)
     return nullptr;
 
   if (this->integer and number->integer) {

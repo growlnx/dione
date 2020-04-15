@@ -50,6 +50,7 @@ namespace ast = dione::ast;
 %define api.token.prefix {TOK_}
 
 %token DCL "declare"
+%token UNDCL "undeclare"
 %token END 0 "end of file"
 %token SWAP "><"
 %token L_ASS "<<"
@@ -59,10 +60,10 @@ namespace ast = dione::ast;
 %token L_BRC "{"
 %token R_BRC "}"
 %token COMMA ","
-%token AS "as"
-%token IMPORT "import"
-%token EXPORT "export"
-%token WHILE "while"
+%token AS "as" 
+%token IMPORT "import" 
+%token EXPORT "export" 
+%token WHILE "while" 
 %token FOR "for"
 %token IF "if"
 %token ELSIF "elsif"
@@ -96,10 +97,10 @@ namespace ast = dione::ast;
 
 %start dione;
 
-// precedence, minor first
-%left MINUS PLUS
+// precedência, aumenta conforme as linhas
+%left PLUS MINUS
 %left MULT DIV
-%precedence NEG POS
+%precedence POS NEG
 
 %%
 
@@ -110,49 +111,52 @@ dione:
   }
   ;
 
-object:
+object[result]:
   LOGIC
   {
-    *$$->logic = $1;
+    // $result = std::make_unique<ast::Object>($1);
   }
-  | TEXT
+  | TEXT[text]
   {
-    $$ = std::make_unique<ast::Object>($1);
+    $result = std::make_unique<ast::Object>($text);
   }
   | number
   {
-    $$ = std::make_unique<ast::Object>(std::move($1));
+    $result = std::make_unique<ast::Object>(std::move($number));
+  }
+  | VAR_ID
+  {
+    // TODO: implementar análise semântica
   }
   | fcn_call
   {
-    // TODO
+    // TODO: implementar análise semântica
   }
   ;
 
-number:
-  REAL
+number[result]:
+  REAL[real]
   {
-    $$ = std::make_unique<ast::Number>($1);
+    $result = std::make_unique<ast::Number>($real);
   }
-  | DEC_INTEGER
+  | DEC_INTEGER[integer]
   {
-    $$ = std::make_unique<ast::Number>($1);
+    $result = std::make_unique<ast::Number>($integer);
   }
   //| BIN_INTEGER
   //{
-  //  // TODO
+  //  // TODO: implementar regra na sintaxe
   //}
   //| HEX_INTEGER
   //{
-  //  // TODO
+  //  // TODO: implementar regra na sintaxe
   //}
   ;
-
 
 fcn_call:
   FCN_ID L_PRT object_list R_PRT
   {
-    // TODO
+    // TODO: implementar regra na sintaxe
   }
   ;
 
@@ -160,68 +164,113 @@ object_list:
   object
   | object_list COMMA object_list
   {
-    // TODO
+    // TODO: implementar regra na sintaxe
   }
   ;
 
-expr:
+expr[result]:
   object
   {
-    $$ = std::make_unique<ast::Expression>(std::move($1));
+    $result = std::make_unique<ast::Expression>(std::move($object));
   }
-  | L_PRT expr R_PRT
+  | MINUS expr[expression] %prec NEG
   {
-    $$ = std::make_unique<ast::Expression>(std::move($2));
-  }
-  | expr MINUS expr
-  {
-    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
-
-  }
-  | expr PLUS expr
-  {
-    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
-  }
-  | expr MULT expr
-  {
-    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
-  }
-  | expr DIV expr
-  {
-    // TODO:
-    // - verificar se operando é nulo
-    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
-  }
-  | expr MOD expr
-  { 
-    // mod é uma operação matemática definida para números inteiros.   
-    if(not ($1->object and $1->object->number and $3->object and $3->object->number)) {
-      error(@2, "Semantic error, mod operation can be done only with numbers");
+    if ($expression->object and not $expression->object->number) {
+      error(@expression, "Semantic error, negative signal can only be set to numbers");
       YYABORT;
-    } 
-
-    if($1->object->number->real) {
-      // TODO: emitir nota informando o casting forçado
-      $1->object->number->integer = std::make_unique<int>((int) *$1->object->number->real);
     }
 
-    if($3->object->number->real) {
-      // TODO: emitir nota informando o casting forçado
-      $3->object->number->integer = std::make_unique<int>((int) *$3->object->number->real);
+    $expression->negative_signal = true;
+    $expression->positive_signal = false;
+    $result = std::make_unique<ast::Expression>(std::move($expression));
+  }
+  | PLUS expr[expression] %prec POS
+  {
+    if($expression->object and not $expression->object->number) {
+      error(@expression, "Semantic error, positive signal can only be set to numbers or expressions");
+      YYABORT;
     }
 
-    $$ = std::make_unique<ast::Expression>(std::move($1), std::move($2), std::move($3));
+    $expression->negative_signal = false;
+    $expression->positive_signal = true;
+    $result = std::make_unique<ast::Expression>(std::move($expression));
+  }
+  | L_PRT expr[expression] R_PRT
+  {
+    $result = std::make_unique<ast::Expression>(std::move($expression));
+  }
+  | expr[leftExpression] MINUS[operator] expr[rightExpression]
+  {
+    $result = std::make_unique<ast::Expression>(
+      std::move($leftExpression),
+      std::move($operator), 
+      std::move($rightExpression)
+    );
+  }
+  | expr[leftExpression] PLUS[operator] expr[rightExpression]
+  {
+    $result = std::make_unique<ast::Expression>(
+      std::move($leftExpression), 
+      std::move($operator), 
+      std::move($rightExpression)
+    );
+  }
+  | expr[leftExpression] MULT[operator] expr[rightExpression]
+  {
+    $result = std::make_unique<ast::Expression>(
+      std::move($leftExpression), std::move($operator), std::move($rightExpression));
+  }
+  | expr[leftExpression] DIV[operator] expr[rightExpression]
+  {
+    if ($rightExpression->object and $rightExpression->object->number and (($rightExpression->object->number->real 
+        and *$rightExpression->object->number->real == 0) or ($rightExpression->object->number->integer 
+        and *$rightExpression->object->number->integer == 0))) {
+      error(@operator, "Semantic error, division by zero is not allowed");
+      YYABORT;
+    }
+
+    $result = std::make_unique<ast::Expression>(
+      std::move($leftExpression), std::move($operator), std::move($rightExpression));
+  }
+  | expr[leftExpression] MOD[operator] expr[rightExpression]
+  {
+    // mod é uma operação matemática definida para números inteiros.
+    if (not($leftExpression->object and $leftExpression->object->number and $rightExpression->object 
+      and $rightExpression->object->number)) {
+      error(@operator, "Semantic error, mod operation can be done only with numbers");
+      YYABORT;
+    }
+
+    if ($leftExpression->object->number->real) {
+      // TODO: emitir nota informando o casting forçado
+      $leftExpression->object->number->integer =
+        std::make_unique<int>((int)*$leftExpression->object->number->real);
+    }
+
+    if ($rightExpression->object->number->real) {
+      // TODO: emitir nota informando o casting forçado
+      $rightExpression->object->number->integer =
+        std::make_unique<int>((int)*$rightExpression->object->number->real);
+    }
+
+    if (*$rightExpression->object->number->integer == 0) {
+      error(@operator, "Semantic error, module by zero is not allowed");
+      YYABORT;
+    }
+
+    $result = std::make_unique<ast::Expression>(
+      std::move($leftExpression), std::move($operator), std::move($rightExpression));
   }
   ;
 
 assign:
   | VAR_ID L_ASS expr
   {
-    // TODO
+    // TODO: implementar análise semântica
   }
   | expr R_ASS VAR_ID
   {
-    // TODO
+    // TODO: implementar análise semântica
   }
   ;
 

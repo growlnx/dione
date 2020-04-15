@@ -1,0 +1,630 @@
+Não terminais inúteis na gramática
+
+    assign
+
+
+Terminais sem uso na gramática
+
+    "declare"
+    "undeclare"
+    "><"
+    "<<"
+    ">>"
+    "{"
+    "}"
+    "as"
+    "import"
+    "export"
+    "while"
+    "for"
+    "if"
+    "elsif"
+    "else"
+    "pure"
+    "data type identifier"
+    "dione program"
+    "expression"
+    "number"
+    "object"
+    "function call"
+
+
+Regras inúteis na gramática
+
+   21 assign: %empty
+   22       | "identifier" "<<" expr
+   23       | expr ">>" "identifier"
+
+
+Estado 16 conflitos: 1 de deslocamento/redução
+Estado 17 conflitos: 1 de deslocamento/redução
+Estado 28 conflitos: 1 de deslocamento/redução
+Estado 29 conflitos: 1 de deslocamento/redução
+Estado 30 conflitos: 1 de deslocamento/redução
+Estado 31 conflitos: 1 de deslocamento/redução
+Estado 32 conflitos: 5 de deslocamento/redução
+Estado 35 conflitos: 1 de deslocamento/redução
+
+
+Gramática
+
+    0 $accept: dione "end of file"
+
+    1 dione: expr
+
+    2 object: "logic data type"
+    3       | "text data type"
+    4       | number
+    5       | "identifier"
+    6       | fcn_call
+
+    7 number: "real data type"
+    8       | "decimal integer data type"
+
+    9 fcn_call: "function identifier" "(" object_list ")"
+
+   10 object_list: object
+   11            | object_list "," object_list
+
+   12 expr: object
+   13     | "-" expr
+   14     | "+" expr
+   15     | "(" expr ")"
+   16     | expr "-" expr
+   17     | expr "+" expr
+   18     | expr "*" expr
+   19     | expr "/" expr
+   20     | expr "%" expr
+
+
+Terminais, com as regras onde eles aparecem
+
+    "end of file" (0) 0
+    error (256)
+    "declare" (258)
+    "undeclare" (259)
+    "><" (260)
+    "<<" (261)
+    ">>" (262)
+    "(" (263) 9 15
+    ")" (264) 9 15
+    "{" (265)
+    "}" (266)
+    "," (267) 11
+    "as" (268)
+    "import" (269)
+    "export" (270)
+    "while" (271)
+    "for" (272)
+    "if" (273)
+    "elsif" (274)
+    "else" (275)
+    "pure" (276)
+    "-" <ast::op_type> (277) 13 16
+    "+" <ast::op_type> (278) 14 17
+    "*" <ast::op_type> (279) 18
+    "/" <ast::op_type> (280) 19
+    "%" <ast::op_type> (281) 20
+    "logic data type" <bool> (282) 2
+    "text data type" <std::string> (283) 3
+    "decimal integer data type" <int> (284) 8
+    "real data type" <float> (285) 7
+    "identifier" <std::string> (286) 5
+    "function identifier" <std::string> (287) 9
+    "data type identifier" <std::string> (288)
+    "dione program" <std::unique_ptr<ast::Dione>> (289)
+    "expression" <std::unique_ptr<ast::Expression>> (290)
+    "number" <std::unique_ptr<ast::Number>> (291)
+    "object" <std::unique_ptr<ast::Object>> (292)
+    "function call" <std::unique_ptr<ast::FunctionCall>> (293)
+    POS (294)
+    NEG (295)
+
+
+Não terminais com as regras onde eles aparecem
+
+    $accept (41)
+        à esquerda: 0
+    dione <std::unique_ptr<ast::Dione>> (42)
+        à esquerda: 1
+        à direita: 0
+    object <std::unique_ptr<ast::Object>> (43)
+        à esquerda: 2 3 4 5 6
+        à direita: 10 12
+    number <std::unique_ptr<ast::Number>> (44)
+        à esquerda: 7 8
+        à direita: 4
+    fcn_call <std::unique_ptr<ast::FunctionCall>> (45)
+        à esquerda: 9
+        à direita: 6
+    object_list (46)
+        à esquerda: 10 11
+        à direita: 9 11
+    expr <std::unique_ptr<ast::Expression>> (47)
+        à esquerda: 12 13 14 15 16 17 18 19 20
+        à direita: 1 13 14 15 16 17 18 19 20
+
+
+Estado 0
+
+    0 $accept: . dione "end of file"
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    dione     ir ao estado 10
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 14
+
+
+Estado 1
+
+   15 expr: "(" . expr ")"
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 15
+
+
+Estado 2
+
+   13 expr: "-" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 16
+
+
+Estado 3
+
+   14 expr: "+" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 17
+
+
+Estado 4
+
+    2 object: "logic data type" .
+
+    $padrão  reduzir usando a regra 2 (object)
+
+
+Estado 5
+
+    3 object: "text data type" .
+
+    $padrão  reduzir usando a regra 3 (object)
+
+
+Estado 6
+
+    8 number: "decimal integer data type" .
+
+    $padrão  reduzir usando a regra 8 (number)
+
+
+Estado 7
+
+    7 number: "real data type" .
+
+    $padrão  reduzir usando a regra 7 (number)
+
+
+Estado 8
+
+    5 object: "identifier" .
+
+    $padrão  reduzir usando a regra 5 (object)
+
+
+Estado 9
+
+    9 fcn_call: "function identifier" . "(" object_list ")"
+
+    "("  deslocar, e ir ao estado 18
+
+
+Estado 10
+
+    0 $accept: dione . "end of file"
+
+    "end of file"  deslocar, e ir ao estado 19
+
+
+Estado 11
+
+   12 expr: object .
+
+    $padrão  reduzir usando a regra 12 (expr)
+
+
+Estado 12
+
+    4 object: number .
+
+    $padrão  reduzir usando a regra 4 (object)
+
+
+Estado 13
+
+    6 object: fcn_call .
+
+    $padrão  reduzir usando a regra 6 (object)
+
+
+Estado 14
+
+    1 dione: expr .
+   16 expr: expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "-"  deslocar, e ir ao estado 20
+    "+"  deslocar, e ir ao estado 21
+    "*"  deslocar, e ir ao estado 22
+    "/"  deslocar, e ir ao estado 23
+    "%"  deslocar, e ir ao estado 24
+
+    $padrão  reduzir usando a regra 1 (dione)
+
+
+Estado 15
+
+   15 expr: "(" expr . ")"
+   16     | expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    ")"  deslocar, e ir ao estado 25
+    "-"  deslocar, e ir ao estado 20
+    "+"  deslocar, e ir ao estado 21
+    "*"  deslocar, e ir ao estado 22
+    "/"  deslocar, e ir ao estado 23
+    "%"  deslocar, e ir ao estado 24
+
+
+Estado 16
+
+   13 expr: "-" expr .
+   16     | expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 13 (expr)]
+    $padrão  reduzir usando a regra 13 (expr)
+
+
+Estado 17
+
+   14 expr: "+" expr .
+   16     | expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 14 (expr)]
+    $padrão  reduzir usando a regra 14 (expr)
+
+
+Estado 18
+
+    9 fcn_call: "function identifier" "(" . object_list ")"
+
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object       ir ao estado 26
+    number       ir ao estado 12
+    fcn_call     ir ao estado 13
+    object_list  ir ao estado 27
+
+
+Estado 19
+
+    0 $accept: dione "end of file" .
+
+    $padrão  aceitar
+
+
+Estado 20
+
+   16 expr: expr "-" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 28
+
+
+Estado 21
+
+   17 expr: expr "+" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 29
+
+
+Estado 22
+
+   18 expr: expr "*" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 30
+
+
+Estado 23
+
+   19 expr: expr "/" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 31
+
+
+Estado 24
+
+   20 expr: expr "%" . expr
+
+    "("                          deslocar, e ir ao estado 1
+    "-"                          deslocar, e ir ao estado 2
+    "+"                          deslocar, e ir ao estado 3
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object    ir ao estado 11
+    number    ir ao estado 12
+    fcn_call  ir ao estado 13
+    expr      ir ao estado 32
+
+
+Estado 25
+
+   15 expr: "(" expr ")" .
+
+    $padrão  reduzir usando a regra 15 (expr)
+
+
+Estado 26
+
+   10 object_list: object .
+
+    $padrão  reduzir usando a regra 10 (object_list)
+
+
+Estado 27
+
+    9 fcn_call: "function identifier" "(" object_list . ")"
+   11 object_list: object_list . "," object_list
+
+    ")"  deslocar, e ir ao estado 33
+    ","  deslocar, e ir ao estado 34
+
+
+Estado 28
+
+   16 expr: expr . "-" expr
+   16     | expr "-" expr .
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "*"  deslocar, e ir ao estado 22
+    "/"  deslocar, e ir ao estado 23
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 16 (expr)]
+    $padrão  reduzir usando a regra 16 (expr)
+
+
+Estado 29
+
+   16 expr: expr . "-" expr
+   17     | expr . "+" expr
+   17     | expr "+" expr .
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "*"  deslocar, e ir ao estado 22
+    "/"  deslocar, e ir ao estado 23
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 17 (expr)]
+    $padrão  reduzir usando a regra 17 (expr)
+
+
+Estado 30
+
+   16 expr: expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   18     | expr "*" expr .
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 18 (expr)]
+    $padrão  reduzir usando a regra 18 (expr)
+
+
+Estado 31
+
+   16 expr: expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   19     | expr "/" expr .
+   20     | expr . "%" expr
+
+    "%"  deslocar, e ir ao estado 24
+
+    "%"       [reduzir usando a regra 19 (expr)]
+    $padrão  reduzir usando a regra 19 (expr)
+
+
+Estado 32
+
+   16 expr: expr . "-" expr
+   17     | expr . "+" expr
+   18     | expr . "*" expr
+   19     | expr . "/" expr
+   20     | expr . "%" expr
+   20     | expr "%" expr .
+
+    "-"  deslocar, e ir ao estado 20
+    "+"  deslocar, e ir ao estado 21
+    "*"  deslocar, e ir ao estado 22
+    "/"  deslocar, e ir ao estado 23
+    "%"  deslocar, e ir ao estado 24
+
+    "-"       [reduzir usando a regra 20 (expr)]
+    "+"       [reduzir usando a regra 20 (expr)]
+    "*"       [reduzir usando a regra 20 (expr)]
+    "/"       [reduzir usando a regra 20 (expr)]
+    "%"       [reduzir usando a regra 20 (expr)]
+    $padrão  reduzir usando a regra 20 (expr)
+
+
+Estado 33
+
+    9 fcn_call: "function identifier" "(" object_list ")" .
+
+    $padrão  reduzir usando a regra 9 (fcn_call)
+
+
+Estado 34
+
+   11 object_list: object_list "," . object_list
+
+    "logic data type"            deslocar, e ir ao estado 4
+    "text data type"             deslocar, e ir ao estado 5
+    "decimal integer data type"  deslocar, e ir ao estado 6
+    "real data type"             deslocar, e ir ao estado 7
+    "identifier"                 deslocar, e ir ao estado 8
+    "function identifier"        deslocar, e ir ao estado 9
+
+    object       ir ao estado 26
+    number       ir ao estado 12
+    fcn_call     ir ao estado 13
+    object_list  ir ao estado 35
+
+
+Estado 35
+
+   11 object_list: object_list . "," object_list
+   11            | object_list "," object_list .
+
+    ","  deslocar, e ir ao estado 34
+
+    ","       [reduzir usando a regra 11 (object_list)]
+    $padrão  reduzir usando a regra 11 (object_list)

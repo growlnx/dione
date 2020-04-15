@@ -7,7 +7,7 @@ ast::Object::Object() {}
 
 ast::Object::Object(std::string text)
 {
-  this->text= std::make_unique<std::string>(text);
+  this->text = std::make_unique<std::string>(text);
 }
 
 ast::Object::Object(std::unique_ptr<ast::Number> number)
@@ -17,7 +17,7 @@ ast::Object::Object(std::unique_ptr<ast::Number> number)
 
 ast::Object::Object(std::unique_ptr<std::string> text)
 {
-  this->text= std::move(text);
+  this->text = std::move(text);
 }
 
 std::unique_ptr<ast::Object>
@@ -26,29 +26,41 @@ ast::Object::add(std::unique_ptr<ast::Object> object)
   if (not object)
     return nullptr;
 
-  if (this->number) {
+  if (number) {
 
     if (object->number) {
       return std::move(std::make_unique<ast::Object>(
-        std::move(this->number->add(std::move(object->number)))));
+        std::move(number->add(std::move(object->number)))));
 
     } else if (object->text) {
-      return std::move(
-        std::make_unique<ast::Object>(std::move(this->number->add(std::move(object->text)))));
+      return std::move(std::make_unique<ast::Object>(
+        std::move(number->add(std::move(object->text)))));
     }
-  }
-  /*else if (this->text) {
+
+  } else if (text) {
 
     if (object->number) {
-      return std::move(
-        std::make_unique<ast::Object>(this->text + object->number));
+
+      if (object->number->real) {
+        // concatena string com número real
+        return std::move(std::make_unique<ast::Object>(
+          *text + std::to_string(*object->number->real)));
+
+      } else if (object->number->integer) {
+        // concatena string com número inteiro
+        return std::move(std::make_unique<ast::Object>(
+          *text + std::to_string(*object->number->integer)));
+      }
 
     } else if (object->text) {
-      return std::move(
-        std::make_unique<ast::Object>(this->text + object->text));
-    }
+      // concantena duas strings
 
-  }*/
+      if (not object->text->size())
+        return std::move(std::make_unique<ast::Object>(*text));
+
+      return std::move(std::make_unique<ast::Object>(*text + *object->text));
+    }
+  }
 
   return nullptr;
 }
@@ -61,7 +73,7 @@ ast::Object::sub(std::unique_ptr<ast::Object> object)
 
   if (object->number) {
     return std::move(std::make_unique<ast::Object>(
-      std::move(this->number->sub(std::move(object->number)))));
+      std::move(number->sub(std::move(object->number)))));
   }
 
   return nullptr;
@@ -75,7 +87,7 @@ ast::Object::mult(std::unique_ptr<ast::Object> object)
 
   if (object->number) {
     return std::move(std::make_unique<ast::Object>(
-      std::move(this->number->mult(std::move(object->number)))));
+      std::move(number->mult(std::move(object->number)))));
   }
 
   return nullptr;
@@ -89,7 +101,7 @@ ast::Object::div(std::unique_ptr<ast::Object> object)
 
   if (object->number) {
     return std::move(std::make_unique<ast::Object>(
-      std::move(this->number->div(std::move(object->number)))));
+      std::move(number->div(std::move(object->number)))));
   }
 
   return nullptr;
@@ -103,7 +115,7 @@ ast::Object::mod(std::unique_ptr<ast::Object> object)
 
   if (object->number) {
     return std::move(std::make_unique<ast::Object>(
-      std::move(this->number->mod(std::move(object->number)))));
+      std::move(number->mod(std::move(object->number)))));
   }
 
   return nullptr;
@@ -116,14 +128,16 @@ ast::Object::print(int level)
 
   std::cout << std::string(level, ' ') << "object : {" << std::endl;
 
-  if (functionCall != nullptr)
+  /*if (functionCall != nullptr)
+    // TODO: implementar print funcionCall AST
     functionCall->print(level);
 
-  else if (number != nullptr)
+  else*/
+  if (number != nullptr)
     number->print(level);
 
   else if (text != nullptr)
-    std::cout << std::string(level + 1, ' ') << "text : " << *text
+    std::cout << std::string(level + 1, ' ') << "text : \"" << *text << "\""
               << std::endl;
 
   else if (logic != nullptr)

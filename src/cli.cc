@@ -1,46 +1,43 @@
 #include "cli.hh"
-#include <string>
 #include <iostream>
+#include <string>
 
 namespace cli = dione::cli;
 
-cli::Cli* 
-cli::parse(int argc, char** argv)
+cli::Cli::Cli(int argc, char** argv)
 {
-  cli::Cli* _cli = new cli::Cli();
 
-  if(argc < 2) help(); 
+  if (argc < 2)
+    help();
 
-  for(int i=1; i < argc; ++i) {
+  for (int i = 1; i < argc; ++i) {
     std::string arg(argv[i]);
-    
-    if(arg == "-pt" or arg == "--parser-trace"){
-      _cli->parseTrace = true;
 
-    } else if(arg == "-lt" or arg == "--lexer-trace") {
-     _cli->lexerTrace = true;
+    if (arg == "-pt" or arg == "--parser-trace") {
+      parseTrace = true;
+
+    } else if (arg == "-lt" or arg == "--lexer-trace") {
+      lexerTrace = true;
     
-    } if(arg == "-h" or arg == "--help") {
+    } else if (arg == "-h" or arg == "--help") {
       help();
       exit(1);
 
-    } else if(arg == "-v" or arg == "--version") {
-    
-    } else if (arg[0] != '-'){ // if not an argument... 
-      _cli->fileNames.push_back(arg);
+    } else if (arg == "-v" or arg == "--version") {
+
+    } else if (arg[0] != '-') { // if not an argument...
+      fileNames.push_back(arg);
 
     } else {
       std::cerr << "invalid cli argument: " << arg << std::endl;
       exit(1);
     }
-
   }
-
-  return _cli;
 }
 
 void
-cli::help()
+cli::Cli::help()
 {
+  // TODO: criar uma mensagem de ajuda
   std::cout << "HELP MSG\n";
 }

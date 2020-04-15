@@ -6,23 +6,18 @@ namespace cli = dione::cli;
 namespace driver = dione::driver;
 
 int
-main(int argc, char* argv[])
+main(int argc, char** argv)
 {
 
-  cli::Cli* args = cli::parse(argc, argv);
-
-  if (args == nullptr)
-    return 1;
+  cli::Cli args(argc, argv);
 
   driver::Driver driver;
-  driver.trace_parsing = args->parseTrace;
-  driver.trace_scanning = args->lexerTrace;
+  driver.trace_parsing = args.parseTrace;
+  driver.trace_scanning = args.lexerTrace;
 
-  // TODO: threaded parsing
-  for (std::string file : args->fileNames)
+  // TODO: realizar o parsing de cada arquivo em uma thread diferente
+  for (std::string file : args.fileNames)
     driver.parse(file);
-
-  delete args;
 
   return 0;
 }

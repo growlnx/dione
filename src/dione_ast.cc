@@ -2,6 +2,7 @@
 #include <iostream>
 namespace ast = dione::ast;
 
+/* TODO: implementar print da AST
 void
 // ast root
 ast::Dione::print()
@@ -14,3 +15,4 @@ ast::Dione::print()
 
   std::cout << "}" << std::endl;
 }
+*/

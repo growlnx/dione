@@ -14,17 +14,10 @@ struct Number;
 struct Object;
 struct FunctionCall;
 struct Var;
-struct CmdList;
-struct Namespace;
-
-struct Dione
-{
-  std::unique_ptr<ast::Block> block;
-
-  // Exibe a estrutura da AST num formato semelhante ao JSON,
-  // isto foi adicionado para fins de debug.
-  void print();
-};
+struct Statements;
+struct MainScope;
+struct ConditionalScope;
+struct FunctionScope;
 
 enum op_type
 {
@@ -35,11 +28,17 @@ enum op_type
   MOD
 };
 
+struct Dione
+{
+  // TODO: implementar AST
+};
+
 struct Expression
 {
   std::unique_ptr<ast::Object> object;
   std::unique_ptr<ast::Expression> expr, lExpr, rExpr;
   ast::op_type op;
+  bool negative_signal = false, positive_signal = false;
 
   Expression();
   Expression(std::unique_ptr<ast::Object> object);
@@ -69,16 +68,20 @@ struct Number
   Number(float real);
 
   std::unique_ptr<ast::Number> add(std::unique_ptr<ast::Number> number);
+  std::unique_ptr<ast::Number> sub(std::unique_ptr<ast::Number> number);
+  std::unique_ptr<ast::Number> mult(std::unique_ptr<ast::Number> number);
+  std::unique_ptr<ast::Number> div(std::unique_ptr<ast::Number> number);
+  std::unique_ptr<ast::Number> mod(std::unique_ptr<ast::Number> number);
+
   // concatena valor numérico no início da string
   // 0+"1234" -> "01234"
   std::unique_ptr<std::string> add(std::unique_ptr<std::string> text);
-  std::unique_ptr<ast::Number> sub(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> mult(std::unique_ptr<ast::Number> number);
-  // concatena a propria string a si mesma N vezes
-  // 10*"1" -> "1111111111"
-  // std::unique_ptr<std::string> mult(std::unique_ptr<std::string> text);
-  std::unique_ptr<ast::Number> div(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> mod(std::unique_ptr<ast::Number> number);
+  // // 1-"asd" -> 
+  // std::unique_ptr<ast::Number> sub(std::unique_ptr<ast::Number> text);
+  // std::unique_ptr<ast::Number> mult(std::unique_ptr<ast::Number> number);
+  // std::unique_ptr<ast::Number> div(std::unique_ptr<ast::Number> number);
+  // std::unique_ptr<ast::Number> mod(std::unique_ptr<ast::Number> number);
+
 
   void print(int level);
 };
@@ -92,14 +95,13 @@ struct Object
 
   Object();
   Object(std::string text);
+  // Object(bool logic);
   Object(std::unique_ptr<ast::Number> number);
   Object(std::unique_ptr<std::string> text);
-
-  // TODO
+  // TODO: implementar construtor para booleanos
   // Object(std::unique_ptr<bool>);
 
   std::unique_ptr<ast::Object> add(std::unique_ptr<ast::Object> object);
-
   std::unique_ptr<ast::Object> sub(std::unique_ptr<ast::Object> object);
   std::unique_ptr<ast::Object> mult(std::unique_ptr<ast::Object> object);
   std::unique_ptr<ast::Object> div(std::unique_ptr<ast::Object> object);
@@ -110,20 +112,34 @@ struct Object
 
 struct FunctionCall
 {
-  // TODO
-  void print(int level);
+  // TODO: implementar ast
+  // void print(int level);
 };
 
-struct CmdList
+struct Statements
 {
-  // TODO
-  void print(int level);
+  // TODO: implementar ast
+  // void print(int level);
 };
 
-struct Block
+// escopo principal do programa,
+// futuramente será modificado quando os namespaces forem implementados
+struct MainScope
 {
-  // TODO
-  void print(int level);
+  // TODO: implementar ast
+  // void print(int level);
+};
+
+struct ConditionalScope
+{
+  // TODO: implementar ast
+  // void print(int level);
+};
+
+struct FunctionScope
+{
+  // TODO: implementar ast
+  // void print(int level);
 };
 
 }

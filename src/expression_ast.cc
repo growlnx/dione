@@ -14,8 +14,10 @@ ast::Expression::Expression(std::unique_ptr<ast::Expression> expr)
 {
   if (expr->object) {
     this->object = std::move(expr->object);
+
   } else if (expr->expr) {
     this->expr = std::move(expr->expr);
+
   } else {
     this->expr = std::move(expr);
   }
@@ -31,28 +33,23 @@ ast::Expression::Expression(std::unique_ptr<ast::Expression> lExpr,
 
       switch (op) {
         case op_type::PLUS:
-          this->object =
-            std::move(lExpr->object->add(std::move(rExpr->object)));
+          object = std::move(lExpr->object->add(std::move(rExpr->object)));
           break;
 
         case op_type::MINUS:
-          this->object =
-            std::move(lExpr->object->sub(std::move(rExpr->object)));
+          object = std::move(lExpr->object->sub(std::move(rExpr->object)));
           break;
 
         case op_type::MULT:
-          this->object =
-            std::move(lExpr->object->mult(std::move(rExpr->object)));
+          object = std::move(lExpr->object->mult(std::move(rExpr->object)));
           break;
 
         case op_type::DIV:
-          this->object =
-            std::move(lExpr->object->div(std::move(rExpr->object)));
+          object = std::move(lExpr->object->div(std::move(rExpr->object)));
           break;
 
         case op_type::MOD:
-          this->object =
-            std::move(lExpr->object->mod(std::move(rExpr->object)));
+          object = std::move(lExpr->object->mod(std::move(rExpr->object)));
           break;
       }
     }
@@ -81,21 +78,27 @@ ast::Expression::print(int level)
 
     std::cout << std::string(level + 1, ' ') << "operator : ";
 
-    // TODO
-    // if (operatorMinus)
-    //   std::cout << "-" << std::endl;
+    switch (op) {
+      case op_type::PLUS:
+        std::cout << "+" << std::endl;
+        break;
 
-    // else if (operatorPlus)
-    //   std::cout << "+" << std::endl;
+      case op_type::MINUS:
+        std::cout << "-" << std::endl;
+        break;
 
-    // else if (operatorMult)
-    //   std::cout << "*" << std::endl;
+      case op_type::MULT:
+        std::cout << "*" << std::endl;
+        break;
 
-    // else if (operatorDiv)
-    //   std::cout << "/" << std::endl;
+      case op_type::DIV:
+        std::cout << "/" << std::endl;
+        break;
 
-    // else if (operatorMod)
-    //   std::cout << "%" << std::endl;
+      case op_type::MOD:
+        std::cout << "%" << std::endl;
+        break;
+    }
 
     lExpr->print(level);
     rExpr->print(level);
