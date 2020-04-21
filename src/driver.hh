@@ -1,8 +1,10 @@
 #pragma once
 
+#include "parser.hh"
 #include <string>
 #include <map>
-#include "parser.hh"
+#include <variant>
+#include <unordered_map>
 
 // Tell Flex the lexer's prototype ...
 # define YY_DECL \
@@ -17,9 +19,9 @@ namespace driver {
 struct Driver
 {
  
-  bool trace_parsing, trace_scanning;
+  bool trace_parsing, trace_scanning, optimize;
   std::string file;
-  std::map<std::string, int> variables; 
+  std::unordered_map<std::string, std::variant<std::nullptr_t, int, float>> vars; 
   int result;
 
   Driver();
@@ -32,6 +34,8 @@ struct Driver
   // call the bison generated parser
   int parse (const std::string& f);
   
+  bool varExists(std::string var);
+
   // Error handling.
   void error(const yy::location& loc, const std::string& msg);
   void error(const std::string& msg);

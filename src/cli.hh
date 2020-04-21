@@ -10,8 +10,10 @@ struct Cli
 {
   std::vector<std::string> fileNames;
   unsigned verboseLevel;
-  bool lexerTrace = false, parseTrace = false;
-
+  bool lexerTrace = false; 
+  bool parseTrace = false;
+  bool optimize = true;
+  
   Cli(int argc, char** argv);
 
   // exibe mensagem de ajuda

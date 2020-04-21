@@ -1,108 +1,73 @@
 #include "ast.hh"
+#include "location.hh"
 #include <iostream>
 
 namespace ast = dione::ast;
 
-ast::Expression::Expression() {}
-
-ast::Expression::Expression(std::unique_ptr<ast::Object> object)
+ast::Expression::~Expression()
 {
-  this->object = std::move(object);
+  delete object;
+  delete expression;
+  delete parentheses_expression;
+  delete left_expression;
+  delete right_expression;
 }
 
-ast::Expression::Expression(std::unique_ptr<ast::Expression> expr)
+std::string
+ast::Expression::print(int ident_level)
 {
-  if (expr->object) {
-    this->object = std::move(expr->object);
+  std::string node = "\n" + std::string(ident_level, ' ') + "expression {\n";
 
-  } else if (expr->expr) {
-    this->expr = std::move(expr->expr);
+  if (object)
+    node += object->print(ident_level + 1);
+  else if (op) {
 
-  } else {
-    this->expr = std::move(expr);
-  }
-}
+    node += std::string(ident_level + 1, ' ') + "operator => ";
 
-ast::Expression::Expression(std::unique_ptr<ast::Expression> lExpr,
-                            op_type op,
-                            std::unique_ptr<ast::Expression> rExpr)
-{
-  if (lExpr->object and rExpr->object) {
-
-    if (rExpr->object) {
-
-      switch (op) {
-        case op_type::PLUS:
-          object = std::move(lExpr->object->add(std::move(rExpr->object)));
-          break;
-
-        case op_type::MINUS:
-          object = std::move(lExpr->object->sub(std::move(rExpr->object)));
-          break;
-
-        case op_type::MULT:
-          object = std::move(lExpr->object->mult(std::move(rExpr->object)));
-          break;
-
-        case op_type::DIV:
-          object = std::move(lExpr->object->div(std::move(rExpr->object)));
-          break;
-
-        case op_type::MOD:
-          object = std::move(lExpr->object->mod(std::move(rExpr->object)));
-          break;
-      }
+    switch (op) {
+      case ast::op_type::PLUS:
+        node += "+";
+        break;
+      case ast::op_type::MINUS:
+        node += "-";
+        break;
+      case ast::op_type::MULT:
+        node += "*";
+        break;
+      case ast::op_type::DIV:
+        node += "/";
+        break;
+      case ast::op_type::MOD:
+        node += "%";
+        break;
+      case ast::op_type::L_ASS:
+        node += "<<";
+        break;
+      case ast::op_type::R_ASS:
+        node += ">>";
+        break;
+      case ast::op_type::SWAP:
+        node += "><";
+        break;
     }
 
-  } else {
-    this->lExpr = std::move(lExpr);
-    this->op = op;
-    this->rExpr = std::move(rExpr);
+    node += left_expression->print(ident_level + 1);
+    node += right_expression->print(ident_level + 1);
   }
+
+  node += "\n" + std::string(ident_level, ' ') + "}";
+
+  return node;
 }
 
 void
-ast::Expression::print(int level)
+ast::Expression::optimize()
 {
-  level++;
+  // TODO
+}
 
-  std::cout << std::string(level, ' ') << "expression : {" << std::endl;
-
-  if (object != nullptr)
-    object->print(level);
-
-  else if (expr != nullptr)
-    expr->print(level);
-
-  else if (lExpr != nullptr and rExpr != nullptr) {
-
-    std::cout << std::string(level + 1, ' ') << "operator : ";
-
-    switch (op) {
-      case op_type::PLUS:
-        std::cout << "+" << std::endl;
-        break;
-
-      case op_type::MINUS:
-        std::cout << "-" << std::endl;
-        break;
-
-      case op_type::MULT:
-        std::cout << "*" << std::endl;
-        break;
-
-      case op_type::DIV:
-        std::cout << "/" << std::endl;
-        break;
-
-      case op_type::MOD:
-        std::cout << "%" << std::endl;
-        break;
-    }
-
-    lExpr->print(level);
-    rExpr->print(level);
-  }
-
-  std::cout << std::string(level, ' ') << "}" << std::endl;
+void
+ast::Expression::generateCode()
+{
+  // TODO
 }

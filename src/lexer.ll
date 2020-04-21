@@ -6,12 +6,13 @@
 #include "driver.hh"
 #include "parser.hh"
 
+// TODO: verificar se este abaixo foi resolvido
 // Work around an incompatibility in flex (at least versions
 // 2.5.31 through 2.5.33): it generates code that does
 // not conform to C89.  See Debian bug 333231
 // <http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=333231>.
-# undef yywrap
-# define yywrap() 1
+#undef yywrap
+#define yywrap() 1
 
 // The location of the current token.
 static yy::location loc;
@@ -19,7 +20,7 @@ static yy::location loc;
 
 %option noyywrap nounput batch debug noinput
 
-id    [a-zA-Z~0-9]*
+id    [a-zA-Z~0-9]
 
 int   [0-9]+
 
@@ -79,6 +80,14 @@ loc.step();
                 return yy::Parser::make_MOD(ast::op_type::MOD, loc);
               }
 
+<INITIAL>"."  {
+                return yy::Parser::make_DOT(loc);
+              }
+
+<INITIAL>","  {
+                return yy::Parser::make_COMMA(loc);
+              }
+
 <INITIAL>"("  {
                 return yy::Parser::make_L_PRT(loc);
               }
@@ -93,6 +102,14 @@ loc.step();
 
 <INITIAL>"}"  {
                 return yy::Parser::make_R_BRC(loc);
+              }
+
+<INITIAL>"["  {
+                return yy::Parser::make_L_BCK(loc);
+              }
+
+<INITIAL>"]"  {
+                return yy::Parser::make_R_BCK(loc);
               }
 
 <INITIAL>"<<" {
@@ -122,6 +139,14 @@ loc.step();
 <INITIAL>"false"  {
                     return yy::Parser::make_LOGIC(false, loc);
                   }
+
+<INITIAL>"integer"  {
+                      return yy::Parser::make_T_INTEGER(loc);
+                    }
+
+<INITIAL>"real" {
+                  return yy::Parser::make_T_REAL(loc);
+                }
 
 <INITIAL>"as" {
                 return yy::Parser::make_AS(loc);
@@ -172,12 +197,8 @@ loc.step();
                         return yy::Parser::make_REAL(n, loc);
                       }
 
-<INITIAL>[a-z]{id}  { 
-                      return yy::Parser::make_VAR_ID(yytext, loc);
-                    }
-
-<INITIAL>[A-Z]{id}  {
-                      return yy::Parser::make_FCN_ID(yytext, loc);
+<INITIAL>[a-z]{id}*  { 
+                      return yy::Parser::make_IDENTIFIER(yytext, loc);
                     }
 
 <INITIAL>\"(\\.|[^"\\])*\"  {
@@ -186,14 +207,8 @@ loc.step();
                               return yy::Parser::make_TEXT(str.substr(1,str.size()-2), loc);
                             }
 
-<INITIAL>~{id}  {
-                  return yy::Parser::make_DATA_ID(yytext, loc);
-                }
-
 <INITIAL>.  {
-              // driver.error (loc, "invalid token: "+std::string(yytext));
-              std::cerr << "[DIONE]:" << loc << ": Lexical error, invalid token: "+std::string(yytext) << std::endl;
-              std::exit(1);
+              driver.error(loc, "lexical error, unexpected "+std::string(yytext));
             }
 
 <INITIAL><<EOF>>  {
@@ -210,8 +225,13 @@ loc.step();
                   loc.step();
                 }
 
+<MULT_COMMENT>[\n]+ {
+                      loc.lines(yyleng); 
+                      loc.step();
+                    }
+
 <MULT_COMMENT><<EOF>> {
-                        std::cerr << "[DIONE]" << loc << ": Lexical error, unclosed multline comment, expected a -|" << std::endl;
+                        driver.error(loc, "lexical error, unexpected end of file expecting -|");
                         std::exit(1);
                       }
 

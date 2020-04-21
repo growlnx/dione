@@ -23,6 +23,9 @@ cli::Cli::Cli(int argc, char** argv)
       help();
       exit(1);
 
+    } else if (arg == "-no" or arg == "-no-optimize") {
+      optimize = false;
+
     } else if (arg == "-v" or arg == "--version") {
 
     } else if (arg[0] != '-') { // if not an argument...

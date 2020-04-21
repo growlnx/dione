@@ -2,21 +2,10 @@
 
 #include <memory>
 #include <string>
+#include "location.hh"
 
 namespace dione {
 namespace ast {
-
-struct Dione;
-struct Block;
-struct Expression;
-struct Number;
-struct Object;
-struct FunctionCall;
-struct Var;
-struct Statements;
-struct MainScope;
-struct ConditionalScope;
-struct FunctionScope;
 
 enum op_type
 {
@@ -30,111 +19,87 @@ enum op_type
   SWAP
 };
 
-struct Dione
+struct Node;
+struct Dione;
+struct Block;
+struct Expression;
+struct Number;
+struct Object;
+struct Var;
+struct Statements;
+struct MainScope;
+struct ConditionalScope;
+struct FunctionScope;
+
+struct Node
+{
+  virtual std::string print(int ident_level) = 0;
+  // virtual void checkSemantic() = 0;
+  virtual void optimize() = 0;
+  virtual void generateCode() = 0;
+};
+
+struct Dione : public Node
 {
   // TODO: implementar AST
 };
 
-struct Expression
+struct Expression : public Node
 {
-  std::unique_ptr<ast::Object> object;
-  std::unique_ptr<ast::Expression> expr, lExpr, rExpr;
+  yy::location left_expr_loc; 
+  yy::location right_expr_loc;
+
+  yy::location op_loc; 
   ast::op_type op;
-  bool negative_signal = false, positive_signal = false;
 
-  Expression();
-  Expression(std::unique_ptr<ast::Object> object);
-  Expression(std::unique_ptr<ast::Expression> expr);
-  Expression(std::unique_ptr<ast::Expression> lExpr,
-             ast::op_type op,
-             std::unique_ptr<ast::Expression> rExpr);
+  yy::location object_loc; 
+  ast::Object *object;
 
-  void print(int level);
+  yy::location expression_loc; 
+  ast::Expression *expression;
+
+  yy::location parentheses_expression_loc;
+  ast::Expression *parentheses_expression;
+
+  yy::location left_expression_loc;
+  ast::Expression *left_expression;
+
+  yy::location right_expression_loc;
+  ast::Expression *right_expression;
+  
+  bool negative_signal = false;
+
+  virtual ~Expression();
+
+  void optimize() override;
+
+  void generateCode() override;
+
+  std::string print(int ident_level) override;
 };
 
-struct Number
+
+struct Object : public Node
 {
-  std::unique_ptr<int> integer;
-  std::unique_ptr<float> real;
+  yy::location loc;
+  bool* logic;
+  char* character;
+  std::string* text;
+  int *integer;
+  float *real;
+  std::string* identifier;
 
-  Number();
-  Number(int integer);
-  Number(float real);
+  virtual ~Object();
 
-  std::unique_ptr<ast::Number> add(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> sub(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> mult(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> div(std::unique_ptr<ast::Number> number);
-  std::unique_ptr<ast::Number> mod(std::unique_ptr<ast::Number> number);
+  bool isNumber();
 
-  // concatena valor numérico no início da string
-  // 0+"1234" -> "01234"
-  std::unique_ptr<std::string> add(std::unique_ptr<std::string> text);
-  // // 1-"asd" -> 
-  // std::unique_ptr<ast::Number> sub(std::unique_ptr<ast::Number> text);
-  // std::unique_ptr<ast::Number> mult(std::unique_ptr<ast::Number> number);
-  // std::unique_ptr<ast::Number> div(std::unique_ptr<ast::Number> number);
-  // std::unique_ptr<ast::Number> mod(std::unique_ptr<ast::Number> number);
+  void optimize() override;
 
+  void generateCode() override;
 
-  void print(int level);
+  std::string print(int ident_level) override;
 };
 
-struct Object
-{
-  std::unique_ptr<ast::FunctionCall> functionCall;
-  std::unique_ptr<ast::Number> number;
-  std::unique_ptr<std::string> text;
-  std::unique_ptr<bool> logic;
 
-  Object();
-  Object(std::string text);
-  // Object(bool logic);
-  Object(std::unique_ptr<ast::Number> number);
-  Object(std::unique_ptr<std::string> text);
-  // TODO: implementar construtor para booleanos
-  // Object(std::unique_ptr<bool>);
-
-  std::unique_ptr<ast::Object> add(std::unique_ptr<ast::Object> object);
-  std::unique_ptr<ast::Object> sub(std::unique_ptr<ast::Object> object);
-  std::unique_ptr<ast::Object> mult(std::unique_ptr<ast::Object> object);
-  std::unique_ptr<ast::Object> div(std::unique_ptr<ast::Object> object);
-  std::unique_ptr<ast::Object> mod(std::unique_ptr<ast::Object> object);
-
-  void print(int level);
-};
-
-struct FunctionCall
-{
-  // TODO: implementar ast
-  // void print(int level);
-};
-
-struct Statements
-{
-  // TODO: implementar ast
-  // void print(int level);
-};
-
-// escopo principal do programa,
-// futuramente será modificado quando os namespaces forem implementados
-struct MainScope
-{
-  // TODO: implementar ast
-  // void print(int level);
-};
-
-struct ConditionalScope
-{
-  // TODO: implementar ast
-  // void print(int level);
-};
-
-struct FunctionScope
-{
-  // TODO: implementar ast
-  // void print(int level);
-};
-
-}
-}
+} // namespace ast
+} // namespace dione
