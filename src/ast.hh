@@ -9,7 +9,6 @@ namespace ast {
 struct Dione;
 struct Block;
 struct Expression;
-struct Assign;
 struct Number;
 struct Object;
 struct FunctionCall;
@@ -25,7 +24,10 @@ enum op_type
   PLUS,
   DIV,
   MULT,
-  MOD
+  MOD,
+  L_ASS,
+  R_ASS,
+  SWAP
 };
 
 struct Dione
@@ -46,14 +48,6 @@ struct Expression
   Expression(std::unique_ptr<ast::Expression> lExpr,
              ast::op_type op,
              std::unique_ptr<ast::Expression> rExpr);
-
-  void print(int level);
-};
-
-struct Assign
-{
-  std::unique_ptr<ast::Expression> expr;
-  std::unique_ptr<ast::Var> var;
 
   void print(int level);
 };

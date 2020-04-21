@@ -96,15 +96,15 @@ loc.step();
               }
 
 <INITIAL>"<<" {
-                return yy::Parser::make_L_ASS(loc);
+                return yy::Parser::make_L_ASS(ast::op_type::L_ASS, loc);
               }
 
 <INITIAL>">>" {
-                return yy::Parser::make_R_ASS(loc);
+                return yy::Parser::make_R_ASS(ast::op_type::R_ASS,loc);
               }
 
 <INITIAL>"><" {
-                return yy::Parser::make_SWAP(loc);
+                return yy::Parser::make_SWAP(ast::op_type::SWAP, loc);
               }
 
 <INITIAL>"pure" {
@@ -162,7 +162,7 @@ loc.step();
                   if (! (INT_MIN <= n && n <= INT_MAX && errno != ERANGE))
                     driver.error (loc, "integer is out of range");
             
-                  return yy::Parser::make_DEC_INTEGER(n, loc);
+                  return yy::Parser::make_INTEGER(n, loc);
                 }
 
 <INITIAL>{int}\.{int} {
