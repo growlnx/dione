@@ -60,6 +60,33 @@ ast::Expression::print(int ident_level)
   return node;
 }
 
+ast::expression_type 
+ast::Expression::getType()
+{
+  if(object != nullptr) return object->getType();
+
+  if(left_expression != nullptr and right_expression != nullptr) {
+    left_expression_type = left_expression->getType();
+
+    if(left_expression_type == ast::expression_type::T_INVALID) 
+      return nullptr;
+
+    right_expression_type = right_expression->getType();
+
+    if(right_expression_type == ast::expression_type::T_INVALID) 
+      return nullptr;
+
+    if(right_expression_type == left_expression_type) 
+      return right_expression_type;
+
+    if(not (left_expression.isNumber() and right_expression.isNumber()))
+      driver.error(op_loc, "semantic error, incompatible types in expression");
+    
+  }
+
+  return ast::expression_type::T_INVALID;
+}
+
 void
 ast::Expression::optimize()
 {

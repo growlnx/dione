@@ -1,5 +1,4 @@
-%{ 
-/* -*- C++ -*- */
+%{ // -*- C++ -*- 
 #include <climits>
 #include <cstdlib>
 #include <string>
@@ -20,15 +19,13 @@ static yy::location loc;
 
 %option noyywrap nounput batch debug noinput
 
-id    [a-zA-Z~0-9]
-
 int   [0-9]+
 
 blank [ \t]
 
 %{
 // Code run each time a pattern is matched.
-#define YY_USER_ACTION  loc.columns (yyleng);
+#define YY_USER_ACTION loc.columns (yyleng);
 %}
 
 %x MULT_COMMENT
@@ -42,7 +39,7 @@ loc.step();
 
 %}
 
-<INITIAL>"|-"  {
+<INITIAL>"-."  {
                   BEGIN(MULT_COMMENT);
                   loc.step();
                 }
@@ -62,6 +59,26 @@ loc.step();
 
 <INITIAL>"-"  {
                 return yy::Parser::make_MINUS(ast::op_type::MINUS, loc);
+              }
+
+<INITIAL>"@"  {
+                return yy::Parser::make_B_AND(ast::op_type::REF, loc);
+              }
+
+<INITIAL>"^"  {
+                return yy::Parser::make_B_AND(ast::op_type::PRT, loc);
+              }
+
+<INITIAL>"&"  {
+                return yy::Parser::make_B_AND(ast::op_type::PLUS, loc);
+              }
+
+<INITIAL>"|"  {
+                return yy::Parser::make_B_OR(ast::op_type::PLUS, loc);
+              }
+
+<INITIAL>"~"  {
+                return yy::Parser::make_B_NOT(ast::op_type::PLUS, loc);
               }
 
 <INITIAL>"+"  {
@@ -88,6 +105,10 @@ loc.step();
                 return yy::Parser::make_COMMA(loc);
               }
 
+<INITIAL>";"  {
+                return yy::Parser::make_SEMIC(loc);
+              }
+
 <INITIAL>"("  {
                 return yy::Parser::make_L_PRT(loc);
               }
@@ -112,25 +133,53 @@ loc.step();
                 return yy::Parser::make_R_BCK(loc);
               }
 
-<INITIAL>"<<" {
-                return yy::Parser::make_L_ASS(ast::op_type::L_ASS, loc);
+<INITIAL>"->" {
+                return yy::Parser::make_ARROW(loc);
               }
 
-<INITIAL>">>" {
-                return yy::Parser::make_R_ASS(ast::op_type::R_ASS,loc);
+<INITIAL>"="  {
+                return yy::Parser::make_ASSIGN(ast::op_type::ASSIGN, loc);
               }
 
-<INITIAL>"><" {
-                return yy::Parser::make_SWAP(ast::op_type::SWAP, loc);
+<INITIAL>"||" {
+                return yy::Parser::make_OR(ast::op_type::OR, loc);
+              }
+
+<INITIAL>"&&"  {
+                  return yy::Parser::make_AND(ast::op_type::AND, loc);
+               }
+
+<INITIAL>"!"  {
+                  return yy::Parser::make_NOT(ast::op_type::NOT, loc);
+              }
+
+<INITIAL>"to" {
+                return yy::Parser::make_TO(loc);
               }
 
 <INITIAL>"pure" {
                   return yy::Parser::make_PURE(loc);
                 }
 
-<INITIAL>"declare"  {
-                      return yy::Parser::make_DCL(loc);
-                    }
+<INITIAL>"entry"  {
+                    return yy::Parser::make_ENTRY(loc);
+                  }
+
+<INITIAL>"return" {
+                    return yy::Parser::make_RTN(loc);
+                  }
+
+<INITIAL>"var"  {
+                  return yy::Parser::make_VAR(loc);
+                }
+
+<INITIAL>"const"  {
+                    return yy::Parser::make_CONST(loc);
+                  }
+
+<INITIAL>"func"   {
+                    return yy::Parser::make_FUNC(loc);
+                  }
 
 <INITIAL>"true" {
                   return yy::Parser::make_LOGIC(true, loc);
@@ -140,18 +189,6 @@ loc.step();
                     return yy::Parser::make_LOGIC(false, loc);
                   }
 
-<INITIAL>"integer"  {
-                      return yy::Parser::make_T_INTEGER(loc);
-                    }
-
-<INITIAL>"real" {
-                  return yy::Parser::make_T_REAL(loc);
-                }
-
-<INITIAL>"as" {
-                return yy::Parser::make_AS(loc);
-              }
-
 <INITIAL>"import" {
                     return yy::Parser::make_IMPORT(loc);
                   }
@@ -160,20 +197,20 @@ loc.step();
                     return yy::Parser::make_EXPORT(loc);
                   }
 
+<INITIAL>"struct" {
+                    return yy::Parser::make_STRUCT(loc);
+                  }
+
 <INITIAL>"while"  {
                     return yy::Parser::make_WHILE(loc);
                   }
-
-<INITIAL>"for"  {
-                  return yy::Parser::make_FOR(loc);
-                }
 
 <INITIAL>"if" {
                 return yy::Parser::make_IF(loc);
               }
 
-<INITIAL>"elsif"  {
-                    return yy::Parser::make_ELSIF(loc);
+<INITIAL>"elif"  {
+                    return yy::Parser::make_ELIF(loc);
                   }
 
 <INITIAL>"else" {
@@ -197,14 +234,14 @@ loc.step();
                         return yy::Parser::make_REAL(n, loc);
                       }
 
-<INITIAL>[a-z]{id}*  { 
-                      return yy::Parser::make_IDENTIFIER(yytext, loc);
-                    }
+<INITIAL>[A-Za-z][0-9a-zA-Z]* { 
+                                return yy::Parser::make_ID(yytext, loc);
+                              }
 
 <INITIAL>\"(\\.|[^"\\])*\"  {
                               // TODO: avaliar se é melhor fazer este escaneamento usando outro estado 
                               std::string str(yytext);
-                              return yy::Parser::make_TEXT(str.substr(1,str.size()-2), loc);
+                              return yy::Parser::make_STR(str.substr(1,str.size()-2), loc);
                             }
 
 <INITIAL>.  {
@@ -215,7 +252,7 @@ loc.step();
                     return yy::Parser::make_END(loc);
                   }
 
-<MULT_COMMENT>"-|"  {
+<MULT_COMMENT>".-"  {
                       // aqui termina o comentário multline
                       loc.step();
                       BEGIN(INITIAL);

@@ -1,5 +1,5 @@
-%skeleton "lalr1.cc" /* -*- C++ -*- */
-%require "3.2"
+%skeleton "lalr1.cc" // -*- C++ -*-
+%require "3.4"
 
 %defines
 %define api.parser.class {Parser}
@@ -11,7 +11,6 @@
 %define parse.error verbose
 
 %code requires {
-
 #include <string>
 #include <iostream>
 #include "ast.hh"
@@ -42,314 +41,267 @@ namespace driver = dione::driver;
 
 namespace ast = dione::ast;
 
-#define OPTIMIZE(NODE) if(driver.optimize) NODE->optimize()
+// #define OPTIMIZE(NODE) if(driver.optimize) NODE->optimize()
 
-#define BIN_EXPR(NODE, OP, OP_LOC, L_NODE, L_NODE_LOC, R_NODE, R_NODE_LOC) {  \
-  NODE = new ast::Expression;                                                 \
-  NODE->op = OP;                                                              \
-  NODE->op_loc = OP_LOC;                                                      \
-  NODE->left_expression = L_NODE;                                             \
-  NODE->left_expression_loc = L_NODE_LOC;                                     \
-  NODE->right_expression = R_NODE;                                            \
-  NODE->right_expression_loc = R_NODE_LOC;                                    \
-}
+// #define BIN_EXPR(NODE, OP, OP_LOC, L_NODE, L_NODE_LOC, R_NODE, R_NODE_LOC) {  \
+//   NODE = new ast::Expression;                                                 \
+//   NODE->op = OP;                                                              \
+//   NODE->op_loc = OP_LOC;                                                      \
+//   NODE->left_expression = L_NODE;                                             \
+//   NODE->left_expression_loc = L_NODE_LOC;                                     \
+//   NODE->right_expression = R_NODE;                                            \
+//   NODE->right_expression_loc = R_NODE_LOC;                                    \
+// }
 
 }
 
 // delimitadores
-%token                END 0     "end of file"
-%token                L_PRT     "("
-%token                R_PRT     ")"
-%token                L_BCK     "["
-%token                R_BCK     "]"
-%token                L_BRC     "{"
-%token                R_BRC     "}"
-%token                COMMA     ","
-%token                DOT       "."
+%token END 0  "end of file"
+%token L_PRT  "("
+%token R_PRT  ")"
+%token L_BCK  "["
+%token R_BCK  "]"
+%token L_BRC  "{"
+%token R_BRC  "}"
+%token COMMA  ","
+%token DOT    "."
+%token SEMIC  ";"
+//%token UNKNOW "?"
+%token ARROW  "->"
 
 // palavras reservadas - keywords
-%token                DCL       "declare"
-%token                AS        "as" 
-%token                IMPORT    "import" 
-%token                EXPORT    "export" 
-%token                WHILE     "while" 
-%token                FOR       "for"
-%token                IF        "if"
-%token                ELSIF     "elsif"
-%token                ELSE      "else"
-%token                PURE      "pure"
-
-// type names
-%token                T_LOGIC   "logic"
-%token                T_TEXT    "text"
-%token                T_CHAR     "char"
-%token                T_INTEGER "integer"
-%token                T_REAL    "real"
+%token VAR    "var"
+%token CONST  "const"
+%token FUNC   "func"
+%token IMPORT "import" 
+%token EXPORT "export" 
+%token WHILE  "while" 
+%token IF     "if"
+%token ELIF   "elif"
+%token ELSE   "else"
+%token PURE   "pure"
+%token ENTRY  "entry"
+%token RTN    "return"
+%token STRUCT "struct"
+%token TO     "to"
 
 // operadores
-%token <ast::op_type> MINUS     "-"
-%token <ast::op_type> PLUS      "+"
-%token <ast::op_type> MULT      "*"
-%token <ast::op_type> DIV       "/"
-%token <ast::op_type> MOD       "%"
-%token <ast::op_type> AND       "and"
-%token <ast::op_type> OR        "or"
-%token <ast::op_type> NOT       "not"
-%token <ast::op_type> EQ        "=="
-%token <ast::op_type> MAJ        ">"
-%token <ast::op_type> MIN       "<"
-%token <ast::op_type> N_EQ      "!="
-%token <ast::op_type> MAJEQ     ">="
-%token <ast::op_type> MINEQ     "<="
-%token <ast::op_type> SWAP      "><"
-%token <ast::op_type> L_ASS     "<<"
-%token <ast::op_type> R_ASS     ">>"
+%token <ast::op_type> MINUS  "-"
+%token <ast::op_type> PLUS   "+"
+%token <ast::op_type> MULT   "*"
+%token <ast::op_type> DIV    "/"
+%token <ast::op_type> MOD    "%"
+%token <ast::op_type> AND    "&&"
+%token <ast::op_type> OR     "||"
+%token <ast::op_type> NOT    "!"
+%token <ast::op_type> B_AND  "&"
+%token <ast::op_type> B_OR   "|"
+%token <ast::op_type> B_NOT  "~"
+%token <ast::op_type> EQ     "=="
+%token <ast::op_type> MAJ    ">"
+%token <ast::op_type> MIN    "<"
+%token <ast::op_type> N_EQ   "!="
+%token <ast::op_type> MAJ_EQ ">="
+%token <ast::op_type> MIN_EQ "<="
+%token <ast::op_type> ASSIGN "="
+%token <ast::op_type> REF    "@"
+%token <ast::op_type> PRT    "^"
 
 // literais
-%token <bool>         LOGIC       "logic literal" 
-%token <std::string>  TEXT        "text literal"
-%token <int>          INTEGER     "integer literal"
-%token <float>        REAL        "real literal"
-%token <std::string>  IDENTIFIER  "identifier"
+%token <bool>        LOGIC       "logic literal" 
+%token <std::string> STR         "str literal"
+%token <int>         INTEGER     "integer literal"
+%token <float>       REAL        "real literal"
+%token <std::string> ID          "identifier"
 
 // precedência, aumenta conforme as linhas
-%left L_ASS R_ASS
-%left NOT AND OR EQ NEQ MAJ MIN MINEQ MAJEQ
+%left OR AND
+%left ASSIGN
+%left EQ N_EQ MAJ MAJ_EQ MIN MIN_EQ
 %left PLUS MINUS
 %left MULT DIV MOD
-%nonassoc AS
-%precedence POS NEG
+%left B_AND B_OR
+%right NEG POS NOT
+%right B_NOT
 
 // ast nodes
-%type <ast::Dione*>       dione     "dione program"
-%type <ast::Expression*>  expr      "expression"
-%type <ast::Object*>      object    "object"
+// %nterm <ast::Dione*>       dione      "dione program"
+// %nterm <ast::Expression*>  expression "expression"
+// %nterm <ast::Object*>      data     "data"
 
 %start dione;
 
 %%
 
 dione
-  : expr
-  {
-    if($1) std::cout << $1->print(0) << std::endl;
-    // $$->generateCode();
-  }
-  | declare_var
-  {
-
-  }
+  : opt_global_escope
   ;
 
-object
-  : LOGIC
-  {
-    $$ = new ast::Object;
-    $$->logic = new bool($1);
-    $$->loc = @1;
-  }
-  | TEXT
-  {
-    $$ = new ast::Object;
-    $$->text = new std::string($1);
-    $$->loc = @1;
-  }
-  | REAL
-  {
-    $$ = new ast::Object;
-    $$->real = new float($1);
-    $$->loc = @1;
-    OPTIMIZE($$);
-  }
-  | INTEGER
-  {
-    $$ = new ast::Object;
-    $$->integer = new int($1);
-    $$->loc = @1;
-    OPTIMIZE($$);
-  }
-  | IDENTIFIER
-  {
-    $$->identifier = new std::string($1);
-    $$->loc = @1;
-    OPTIMIZE($$);
-  }
+opt_global_escope
+  : %empty
+  | opt_vis func_def opt_global_escope
+  | opt_vis var_def  opt_global_escope
+  | opt_vis const_def opt_global_escope
+  | "import" "var" ID  type ";" opt_global_escope
+  | "import" "const" ID type ";" opt_global_escope 
+  | "import" opt_func_attr "func" ID opt_func_param opt_func_rtn ";" opt_global_escope
+  | struct_def opt_global_escope
   ;
 
-expr
-  : object
-  {
-    $$ = new ast::Expression;
-    $$->object = $1;
-    $$->object_loc = @1;
-
-    OPTIMIZE($$);
-  }
-  | MINUS expr %prec NEG
-  {
-    $$ = new ast::Expression;
-
-    if($2->object and not $2->object->isNumber()) {
-      error(@1, "Semantic error, invalid negative operator with NaN object");
-      YYABORT;
-    }
-
-    // se for um número a gente já resolve aqui
-    if($2->object->integer) *$2->object->integer *= -1;
-    else if($2->object->real) *$2->object->real *= -1;
-    else $2->negative_signal = not $2->negative_signal;
-
-    $$ = $2;
-  }
-  | PLUS expr %prec POS
-  {
-    // colocar vários ++++ não fará diferença na AST
-    $$ = $2;
-  }
-  | NOT expr
-  {
-    $$ = new ast::Expression;
-    $$->op = $1;
-    $$->op_loc = @1;
-    $$->right_expression = $2;
-    $$->right_expression_loc = @2;
-
-    OPTIMIZE($$);
-  }
-  | expr AS T_REAL
-  {
-    // TODO: casting
-    if($1->object and $1->object->isNumber() and $1->object->integer) {
-      $1->object->real = new float((float)*$1->object->real);
-      delete $1->object->integer;
-    }
-
-    $$ = $1;
-  }
-  | expr AS T_INTEGER
-  {
-    // TODO: casting
-    if($1->object and $1->object->isNumber() and $1->object->real) {
-      $1->object->integer = new int((int)*$1->object->real);
-      delete $1->object->real;
-    }
-
-    $$ = $1;
-  }
-  | L_PRT expr R_PRT
-  {
-    $$ = new ast::Expression;
-    $$->parentheses_expression = $2;
-
-    OPTIMIZE($$);
-  }
-  | expr PLUS expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MINUS expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MULT expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr DIV expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MOD expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr AND expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr OR expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr EQ expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MAJ expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MIN expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MAJEQ expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
-  | expr MINEQ expr
-  {
-    BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-    OPTIMIZE($$);
-  }
+opt_loc_escope
+  : %empty
+  | "{" opt_loc_escope "}" opt_loc_escope
+  | var_def opt_loc_escope
+  | const_def opt_loc_escope
+  | expr ";" opt_loc_escope
+  | while_loop opt_loc_escope
+  | if_cond opt_loc_escope
+  | "return" expr ";" opt_loc_escope
   ;
 
-// assigment
-//   : IDENTIFIER SWAP IDENTIFIER
-//   {
-//     OPTIMIZE($$);
-//   }
-//   | IDENTIFIER L_ASS expr
-//   {
-//     BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-//     OPTIMIZE($$);
-//   }
-//   | identifier R_ASS IDENTIFIER
-//   {
-//     BIN_EXPR($$, $2, @2, $1, @1, $3, @3);
-//     OPTIMIZE($$);
-//   }
-//   ;
-
-declare_var
-  : DCL var_list
-  {
-    // if(driver.varExists($2)) {
-    //   error(@2, "Semantic error, variable or constant already declared");
-    //   YYABORT;
-    // }
-
-    // driver.vars[$2] = nullptr;
-  }
+var_def
+  : "var" ID  type ";"
+  | "var" ID "=" expr opt_type ";"
   ;
 
-var_type
-  : IDENTIFIER
-  | IDENTIFIER AS type
+const_def
+  : "const" ID "=" expr opt_type ";"
   ;
 
-var_list
-  : var_type
-  | var_list COMMA var_type
+opt_type
+  : %empty
+  | type
   ;
 
 type
-  : T_INTEGER
-  | T_REAL
-  | T_TEXT
-  | T_LOGIC
-  | T_CHAR
+  // built-in types
+  : opt_type_mod ID
+  ;
+
+opt_type_mod
+  : %empty
+  // referência
+  | "@"
+  // ponteiro
+  | "^"
+  ;
+
+func_def
+  : opt_func_attr "func" ID opt_func_param opt_func_rtn "{" opt_loc_escope "}"
+  ;
+
+opt_func_attr
+  : %empty
+  | "pure"
+  | "entry"
+  ;
+
+opt_vis
+  : %empty
+  | "export"
+  ;
+
+opt_func_param
+  : %empty
+  | typed_var
+  | "(" param_ls ")"
+  ;
+
+param_ls
+  : typed_var
+  | typed_var "," param_ls
+  ;
+
+typed_var
+  : ID type
+  ;
+
+opt_func_rtn
+  : %empty
+  | "->" type
+  ;
+
+expr
+  : prim_expr
+  // prt
+  | "*" prim_expr %prec PRT
+  | "&" prim_expr %prec REF
+  // algebra básica
+  | "-" prim_expr %prec NEG
+  | "+" prim_expr %prec POS
+  | expr "+" expr
+  | expr "-" expr
+  | expr "*" expr
+  | expr "/" expr
+  | expr "%" expr
+  // bitwise
+  | "~" prim_expr
+  | expr "&" expr
+  | expr "|" expr
+  // comparação
+  | "!" prim_expr
+  | expr "&&" expr
+  | expr "||" expr
+  | expr "==" expr
+  | expr "!=" expr
+  | expr ">"  expr
+  | expr ">=" expr
+  | expr "<"  expr
+  | expr "<=" expr
+  // atribuição
+  | ID "=" expr
+  // func call
+  // | FUNC_ID "(" opt_arg_ls ")" 
+  | ID "(" opt_arg_ls ")"
+  | "(" expr ")" "(" opt_arg_ls ")"  
+  // array acess
+  | ID "[" expr "]"
+  | "(" expr ")" "[" expr "]"
+  // casting
+  | "(" expr ")" "to" type
+  ;
+
+prim_expr
+  : data
+  | prim_expr "." ID
+  | prim_expr "->" ID
+  | "(" expr ")"
+  ;
+
+data
+  : LOGIC                
+  | STR              
+  | INTEGER             
+  | REAL                
+  | ID
+  ;
+
+opt_arg_ls
+  : %empty
+  | expr
+  | expr "," opt_arg_ls 
+  ;
+
+while_loop
+  : "while" expr "{" opt_loc_escope "}"
+  ;
+
+if_cond
+  : "if" expr "{" opt_loc_escope "}" opt_elif_cond opt_else_cond
+  ;
+
+opt_elif_cond
+  : %empty
+  | "elif" expr "{" opt_loc_escope "}" opt_elif_cond
+  ;
+
+opt_else_cond
+  : %empty
+  | "else" "{" opt_loc_escope "}"
+  ;
+
+struct_def
+  : "struct" ID "{" param_ls "}"
   ;
 
 %%

@@ -1,0 +1,5 @@
+import Fibonacci (n as integer)
+
+declare Fibonacci (n as integer, x as real) => integer {????}
+
+export Main {?}

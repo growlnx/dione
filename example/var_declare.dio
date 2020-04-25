@@ -1,1 +1,3 @@
-declare x, y, Z as *i32
+declare x, y, z
+declare x as integer, y as real
+declare x
