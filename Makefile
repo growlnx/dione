@@ -3,7 +3,7 @@
 PROJECT	= dione
 CC		= clang++
 CFLAGS	= -g -std=c++17
-LFLAGS	= -ldl
+LFLAGS	= 
 BFLAGS  = -v
 FFLAGS  =
 SRC		= src

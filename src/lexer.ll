@@ -62,11 +62,11 @@ loc.step();
               }
 
 <INITIAL>"@"  {
-                return yy::Parser::make_B_AND(ast::op_type::REF, loc);
+                return yy::Parser::make_REF(ast::op_type::REF, loc);
               }
 
 <INITIAL>"^"  {
-                return yy::Parser::make_B_AND(ast::op_type::PRT, loc);
+                return yy::Parser::make_PRT(ast::op_type::PRT, loc);
               }
 
 <INITIAL>"&"  {

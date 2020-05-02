@@ -2,6 +2,7 @@
 %require "3.4"
 
 %defines
+%define lr.type ielr
 %define api.parser.class {Parser}
 %define api.token.prefix {TOKEN_}
 %define api.token.constructor
@@ -13,6 +14,7 @@
 %code requires {
 #include <string>
 #include <iostream>
+#include <memory>
 #include "ast.hh"
 
 namespace dione {
@@ -38,21 +40,10 @@ namespace driver = dione::driver;
 
 %code {
 #include "driver.hh"
+#include <memory>
+#include <variant>
 
 namespace ast = dione::ast;
-
-// #define OPTIMIZE(NODE) if(driver.optimize) NODE->optimize()
-
-// #define BIN_EXPR(NODE, OP, OP_LOC, L_NODE, L_NODE_LOC, R_NODE, R_NODE_LOC) {  \
-//   NODE = new ast::Expression;                                                 \
-//   NODE->op = OP;                                                              \
-//   NODE->op_loc = OP_LOC;                                                      \
-//   NODE->left_expression = L_NODE;                                             \
-//   NODE->left_expression_loc = L_NODE_LOC;                                     \
-//   NODE->right_expression = R_NODE;                                            \
-//   NODE->right_expression_loc = R_NODE_LOC;                                    \
-// }
-
 }
 
 // delimitadores
@@ -124,10 +115,18 @@ namespace ast = dione::ast;
 %right NEG POS NOT
 %right B_NOT
 
-// ast nodes
-// %nterm <ast::Dione*>       dione      "dione program"
-// %nterm <ast::Expression*>  expression "expression"
-// %nterm <ast::Object*>      data     "data"
+%nterm <ast::GlobalEscope> opt_global_escope
+%nterm <ast::VarDef> var_def const_def
+%nterm <bool> opt_vis
+%nterm <ast::expression> expr
+%nterm <std::unique_ptr<ast::PrimaryExpression>> prim_expr
+%nterm <std::optional<ast::expression>> opt_init
+%nterm <std::optional<ast::type>> opt_type
+%nterm <ast::type> type
+%nterm <ast::data_type> data
+
+%nterm <std::optional<ast::op_type>>opt_type_mod
+//%nterm <ast::LocalEscope> opt_local_escope
 
 %start dione;
 
@@ -135,174 +134,275 @@ namespace ast = dione::ast;
 
 dione
   : opt_global_escope
+  {
+    $1.print(1);
+  }
   ;
 
 opt_global_escope
   : %empty
-  | opt_vis func_def opt_global_escope
-  | opt_vis var_def  opt_global_escope
-  | opt_vis const_def opt_global_escope
-  | "import" "var" ID  type ";" opt_global_escope
-  | "import" "const" ID type ";" opt_global_escope 
-  | "import" opt_func_attr "func" ID opt_func_param opt_func_rtn ";" opt_global_escope
-  | struct_def opt_global_escope
+  {
+    $$.check();
+  }
+  | opt_global_escope opt_vis const_def
+  {
+    $3.exported = std::move($2);
+    $1.statements.push_back(std::move($3));
+    $$ = std::move($1);
+  }
+  | opt_global_escope opt_vis var_def
+  {
+    $3.exported = std::move($2);
+    $1.statements.push_back(std::move($3));
+    $$ = std::move($1);
+  }
+  // | opt_vis func_def opt_global_escope
+  // | opt_global_escope "import" "var" ID  type ";"
+  // | opt_global_escope "import" "const" ID type ";" 
+  // | opt_global_escope "import" opt_func_attr "func" ID opt_func_param opt_func_rtn ";"
+  // | opt_global_escope struct_def
   ;
 
-opt_loc_escope
-  : %empty
-  | "{" opt_loc_escope "}" opt_loc_escope
-  | var_def opt_loc_escope
-  | const_def opt_loc_escope
-  | expr ";" opt_loc_escope
-  | while_loop opt_loc_escope
-  | if_cond opt_loc_escope
-  | "return" expr ";" opt_loc_escope
+//opt_loc_escope
+//  : %empty
+//  | "{" opt_loc_escope "}" opt_loc_escope
+//  | var_def opt_loc_escope
+//  | const_def opt_loc_escope
+//   | expr ";" opt_loc_escope
+//   | while_loop opt_loc_escope
+//   | if_cond opt_loc_escope
+//   | "return" expr ";" opt_loc_escope
   ;
-
+ 
 var_def
-  : "var" ID  type ";"
-  | "var" ID "=" expr opt_type ";"
+  : "var" ID opt_init opt_type ";"
+  {
+    $$.id = std::move($2);
+    $$.id_loc = std::move(@2);
+
+    if($3) {
+      $$.value = std::move($3);
+      $$.value_loc = std::move(@3);
+    }
+
+    if($4) {
+      $$.var_type = std::move($4);
+      $$.var_type_loc = std::move(@4);
+    } 
+  }
+  ;
+
+opt_init
+  : %empty
+  {
+    $$ = std::nullopt;
+  }
+  | "=" expr
+  {
+    $$ = std::move($2);
+  }
   ;
 
 const_def
   : "const" ID "=" expr opt_type ";"
+  {
+    $$.id = std::move($2);
+    $$.id_loc = std::move(@2);
+
+    $$.value = std::move($4);
+    $$.value_loc = std::move(@4);
+
+    if($5) {
+      $$.var_type = std::move($5);
+      $$.var_type_loc = std::move(@5);
+    }
+  }
   ;
 
 opt_type
   : %empty
+  {
+    $$ = std::nullopt;
+  }
   | type
+  {
+    $$ = std::move($1);
+  }
   ;
 
 type
   // built-in types
   : opt_type_mod ID
+  {
+    $$ = std::make_pair(std::move($1), std::move($2));
+  }
   ;
 
 opt_type_mod
   : %empty
+  {
+    $$ = std::nullopt;
+  }
   // referência
   | "@"
+  {
+    $$ = ast::op_type::REF;
+  }
   // ponteiro
   | "^"
-  ;
-
-func_def
-  : opt_func_attr "func" ID opt_func_param opt_func_rtn "{" opt_loc_escope "}"
-  ;
-
-opt_func_attr
-  : %empty
-  | "pure"
-  | "entry"
+  {
+    $$ = ast::op_type::PRT;
+  }
   ;
 
 opt_vis
   : %empty
+  {
+    $$ = false;
+  }
   | "export"
+  {
+    $$ = true;
+  }
   ;
 
-opt_func_param
-  : %empty
-  | typed_var
-  | "(" param_ls ")"
-  ;
+// func_def
+//   : opt_func_attr "func" ID opt_func_param opt_func_rtn "{" opt_loc_escope "}"
+//   ;
 
-param_ls
-  : typed_var
-  | typed_var "," param_ls
-  ;
+// opt_func_attr
+//   : %empty
+//   | "pure"
+//   | "entry"
+//   ;
 
-typed_var
-  : ID type
-  ;
+// opt_func_param
+//   : %empty
+//   | typed_var
+//   | "(" param_ls ")"
+//   ;
 
-opt_func_rtn
-  : %empty
-  | "->" type
-  ;
+// param_ls
+//   : typed_var
+//   | typed_var "," param_ls
+//   ;
+
+// typed_var
+//   : ID type
+//   ;
+
+// opt_func_rtn
+//   : %empty
+//   | "->" type
+//   ;
 
 expr
   : prim_expr
+  {
+    $$ = std::move($1);
+  }
   // prt
-  | "*" prim_expr %prec PRT
-  | "&" prim_expr %prec REF
+  //| "*" prim_expr %prec PRT
+  //| "&" prim_expr %prec REF
   // algebra básica
-  | "-" prim_expr %prec NEG
-  | "+" prim_expr %prec POS
-  | expr "+" expr
-  | expr "-" expr
-  | expr "*" expr
-  | expr "/" expr
-  | expr "%" expr
+  //| "-" prim_expr %prec NEG
+  //| "+" prim_expr %prec POS
+  //| expr "+" expr
+  // | expr "-" expr
+  // | expr "*" expr
+  // | expr "/" expr
+  // | expr "%" expr
   // bitwise
-  | "~" prim_expr
-  | expr "&" expr
-  | expr "|" expr
+  // | "~" prim_expr
+  // | expr "&" expr
+  // | expr "|" expr
   // comparação
-  | "!" prim_expr
-  | expr "&&" expr
-  | expr "||" expr
-  | expr "==" expr
-  | expr "!=" expr
-  | expr ">"  expr
-  | expr ">=" expr
-  | expr "<"  expr
-  | expr "<=" expr
+  // | "!" prim_expr
+  // | expr "&&" expr
+  // | expr "||" expr
+  // | expr "==" expr
+  // | expr "!=" expr
+  // | expr ">"  expr
+  // | expr ">=" expr
+  // | expr "<"  expr
+  // | expr "<=" expr
   // atribuição
-  | ID "=" expr
+  // | ID "=" expr
   // func call
-  // | FUNC_ID "(" opt_arg_ls ")" 
-  | ID "(" opt_arg_ls ")"
-  | "(" expr ")" "(" opt_arg_ls ")"  
+  // | FUNC_ID "(" opt_arg_ls ")"
+  // | ID "(" opt_arg_ls ")"
+  // | "(" expr ")" "(" opt_arg_ls ")"
   // array acess
-  | ID "[" expr "]"
-  | "(" expr ")" "[" expr "]"
+  // | ID "[" expr "]"
+  // | "(" expr ")" "[" expr "]"
   // casting
-  | "(" expr ")" "to" type
+  // | "(" expr ")" "to" type
   ;
 
 prim_expr
   : data
-  | prim_expr "." ID
-  | prim_expr "->" ID
+  {
+    $$ = std::make_unique<ast::PrimaryExpression>();
+    $$->value = std::move($1);
+  }
+  //  | prim_expr "." ID
+  //  | prim_expr "->" ID
   | "(" expr ")"
+  {
+    $$->value = std::move($2);
+  }
   ;
 
 data
-  : LOGIC                
-  | STR              
-  | INTEGER             
-  | REAL                
+  : LOGIC
+  {
+    $$ = std::move($1);
+  }
+  | STR
+  {
+    $$ = std::move($1);
+  }
+  | INTEGER
+  {
+    $$ = std::move($1);
+  }
+  | REAL
+  {
+    $$ = std::move($1);
+  }
   | ID
+  {
+    $$ = std::move($1);
+  }
   ;
 
 opt_arg_ls
   : %empty
   | expr
-  | expr "," opt_arg_ls 
+  | expr "," opt_arg_ls
   ;
 
-while_loop
-  : "while" expr "{" opt_loc_escope "}"
-  ;
+// while_loop
+//   : "while" expr "{" opt_loc_escope "}"
+//   ;
 
-if_cond
-  : "if" expr "{" opt_loc_escope "}" opt_elif_cond opt_else_cond
-  ;
+// if_cond
+//   : "if" expr "{" opt_loc_escope "}" opt_elif_cond opt_else_cond
+//   ;
 
-opt_elif_cond
-  : %empty
-  | "elif" expr "{" opt_loc_escope "}" opt_elif_cond
-  ;
+// opt_elif_cond
+//   : %empty
+//   | "elif" expr "{" opt_loc_escope "}" opt_elif_cond
+//   ;
 
-opt_else_cond
-  : %empty
-  | "else" "{" opt_loc_escope "}"
-  ;
+// opt_else_cond
+//   : %empty
+//   | "else" "{" opt_loc_escope "}"
+//   ;
 
-struct_def
-  : "struct" ID "{" param_ls "}"
-  ;
+// struct_def
+//   : "struct" ID "{" param_ls "}"
+//   ;
 
 %%
 

@@ -1,7 +1,5 @@
-func Main -> u32 {
-	
-	var ^pessoa = CreatePessoa() Pessoa;
-    DestroyPessoa(@pessoa);
-	
-	return 0;
-}
+const X = 10;
+const Y = 10 i32;
+var x @i64;
+var y = 1;
+var z = 1 ^i8;

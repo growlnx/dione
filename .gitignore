@@ -6,3 +6,4 @@ src/parser.cc
 src/parser.hh
 src/location.hh
 src/stack.hh
+src/parser.output
